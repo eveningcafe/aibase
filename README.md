@@ -30,36 +30,41 @@ aibase/
 ## Where the money is today — the revenue pyramid
 
 Revenue across the stack is a pyramid: the closer a layer sits to the
-**hardware at the base**, the more of today's money it captures (2025).
+**hardware at the base**, the more of today's money it captures (figures
+mid-2026).
 
 ```
                     ┌──────────────┐
                     │     APPS     │  L5 · fragmented, many startups
                   ┌─┴──────────────┴─┐
-                  │  ORCHESTRATION   │  L4 · LangChain ~$14M ARR — max hype, min revenue
+                  │  ORCHESTRATION   │  L4 · LangChain ~$16M ARR — max hype, min revenue
                 ┌─┴──────────────────┴─┐
-                │        DATA          │  L3 · Scale AI ~$2B · vector-DB mkt ~$2.5B
+                │        DATA          │  L3 · Scale AI ~$2B (Meta took 49%)
               ┌─┴──────────────────────┴─┐
-              │   FOUNDATION MODELS      │  L2 · OpenAI ~$13–20B · Anthropic ~$4B
+              │   FOUNDATION MODELS      │  L2 · OpenAI ~$33B · Anthropic ~$45B*
             ┌─┴──────────────────────────┴─┐
-            │   INFRASTRUCTURE / CHIPS      │  L1 · Nvidia ~$115B→$200B · capex $250B+/yr
+            │   INFRASTRUCTURE / CHIPS      │  L1 · Nvidia ~$75B/qtr → ~$300B run-rate
             └──────────────────────────────┘
                     base = most $ captured today
 ```
 
-| Layer | Who | Revenue (2025) |
+| Layer | Who | Revenue (mid-2026) |
 |-------|-----|----------------|
-| **1 · Infrastructure / chips** | Nvidia data-center | ~$115B → ~$200B run-rate; capex $250B+/yr |
-| **2 · Foundation models** | OpenAI / Anthropic | ~$13–20B / ~$3.8B |
-| **3 · Data** | Scale AI; vector DBs | ~$2B; vector-DB market ~$2.5B |
-| **4 · Orchestration** | LangChain | ~$14M ARR |
+| **1 · Infrastructure / chips** | Nvidia data-center | ~$75B/qtr (Q1 FY27, +92% YoY) → ~$300B run-rate |
+| **2 · Foundation models** | OpenAI / Anthropic | ~$33B / ~$45B ARR — Anthropic now leads* |
+| **3 · Data** | Scale AI; vector DBs | ~$2B; Meta bought a 49% stake ($14.3B) |
+| **4 · Orchestration** | LangChain | ~$16M ARR |
 | **5 · Applications** | thousands of startups | fragmented, individually small |
 
-Two things to notice: revenue concentrates at the base (Nvidia alone earns more
-than every model company combined), and **hype ≠ revenue** — the orchestration
-layer gets the most attention but captures the least money today. Value is
-expected to shift up toward applications over time, as it did when cloud value
-moved from AWS infrastructure to SaaS apps.
+\* Anthropic's ~$45B is gross (it books cloud-reseller end-customer spend as
+revenue); on OpenAI's preferred net basis it's ~$22B. *Always ask: gross or net?*
+
+Two things to notice: revenue concentrates at the base (Nvidia alone, ~$300B
+run-rate, earns more than every model company combined), and **hype ≠ revenue**
+— the orchestration layer gets the most attention but captures the least money
+(LangChain is ~1/18,000th of Nvidia). Value is expected to shift up toward
+applications over time, as it did when cloud value moved from AWS infrastructure
+to SaaS apps.
 
 ## The three types of innovation
 

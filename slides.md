@@ -26,6 +26,28 @@ style: |
 A map of how AI systems are built — and where the money, the work,
 and the value actually are.
 
+<!--
+Open: a model is just one piece. Today we map the whole stack, then look at the
+money and what it means for DevOps. Figures are as of mid-2026; the CEO-math
+numbers are illustrative — the method matters, not the exact dollars.
+-->
+
+---
+
+## Agenda
+
+1. **Why a stack?** — a model is one piece
+2. **The 5 layers** — infra → models → data → orchestration → application
+3. **The business view** — revenue pyramid · 3 types of innovation
+4. **Case studies** — chatbot · RAG · the vendor-vs-operator trap
+5. **AI in DevOps** — Copilot · AIOps · the DORA counterpoint
+6. **Takeaways**
+
+<!--
+~35-45 min. Stop me with questions during the layers; hold strategy questions
+for the business section where they'll be answered.
+-->
+
 ---
 
 ## Why a "stack"?
@@ -37,6 +59,12 @@ ground it, **orchestration** to coordinate it, and an **application** for the
 user.
 
 Every choice across the stack drives **quality · speed · cost · safety**.
+
+<!--
+Concrete example: a research assistant for new scientific papers. The model
+alone can't help — it has a knowledge cutoff, needs GPUs, needs the papers as
+data, needs steps to plan/summarize, and a UI. That's the whole stack.
+-->
 
 ---
 
@@ -52,6 +80,11 @@ Every choice across the stack drives **quality · speed · cost · safety**.
 
 We'll go bottom → top, then look at the **business** picture.
 
+<!--
+You can buy a managed service that hides several layers, or build each yourself.
+Either way you should know all five exist — that's how you debug cost/quality.
+-->
+
 ---
 
 ## 1 · Infrastructure
@@ -65,6 +98,11 @@ Three ways to deploy:
 - **Local** — laptop; only the smaller models
 
 > The hardware you can access decides what models you can run at all.
+
+<!--
+DevOps tie-in: this is the layer your audience provisions — GPU nodes on k8s,
+autoscaling, cost control. The capex here is what feeds the revenue pyramid later.
+-->
 
 ---
 
@@ -81,6 +119,12 @@ Lifecycle glue = **MLOps**.
 
 > Need fresh knowledge, not new behavior? Prefer RAG over fine-tuning.
 
+<!--
+Common student misconception: "we must train our own model." Almost never. Use
+an existing one; fine-tune for behavior/format; RAG for knowledge. MLOps is the
+DevOps of this layer.
+-->
+
 ---
 
 ## 3 · Data
@@ -93,6 +137,11 @@ sources → pipelines (clean/chunk) → embed → vector store → RAG → model
 
 **RAG** retrieves relevant context and augments the prompt — fresh & private
 knowledge without retraining.
+
+<!--
+RAG = open-book exam vs memorizing. The model looks things up at answer time.
+This is what powers the Morgan Stanley case later.
+-->
 
 ---
 
@@ -110,6 +159,12 @@ plan ──▶ execute (tools) ──▶ review ──▶ (loop)
 Two kinds: **static** (reliable workflows) + **agentic** (autonomous decisions).
 Fastest-moving layer — agents, MCP.
 
+<!--
+Key line: orchestration is the mechanism, "agentic" is the behavior. This is the
+most hyped layer — remember that when we hit the revenue pyramid (it earns the
+least).
+-->
+
 ---
 
 ## 5 · Application
@@ -123,6 +178,11 @@ Where AI meets the user. Two questions:
 > "What the AI *does*" is orchestration. "What the user sees / where the result
 > lands" is the application layer.
 
+<!--
+Examples: summarize email, text→report, chat replacing a shopping/fintech form.
+The brain is layer 4; fitting it into screens + business flow is layer 5.
+-->
+
 ---
 
 <!-- _class: lead -->
@@ -131,26 +191,38 @@ Where AI meets the user. Two questions:
 
 Where is the money — and where is the value?
 
+<!--
+Shift gears. Students entering AI need orientation: where dollars flow today vs
+where value is created. These are two different questions.
+-->
+
 ---
 
-## Revenue pyramid (2025)
+## Revenue pyramid (mid-2026)
 
 ```
               ┌──────────────┐
               │     APPS     │  fragmented startups
             ┌─┴──────────────┴─┐
-            │  ORCHESTRATION   │  LangChain ~$14M ARR
+            │  ORCHESTRATION   │  LangChain ~$16M ARR
           ┌─┴──────────────────┴─┐
           │        DATA          │  Scale AI ~$2B
         ┌─┴──────────────────────┴─┐
-        │   FOUNDATION MODELS      │  OpenAI ~$13–20B · Anthropic ~$4B
+        │   FOUNDATION MODELS      │  OpenAI ~$33B · Anthropic ~$45B*
       ┌─┴──────────────────────────┴─┐
-      │   INFRASTRUCTURE / CHIPS      │  Nvidia ~$115B→$200B
+      │   INFRASTRUCTURE / CHIPS      │  Nvidia ~$75B/qtr → ~$300B run-rate
       └──────────────────────────────┘
 ```
 
-Revenue concentrates at the **base**. **Hype ≠ revenue** — orchestration gets
-the most attention, captures the least money.
+Revenue concentrates at the **base** (Nvidia alone > all model companies).
+**Hype ≠ revenue** — orchestration gets the most attention, the least money
+(LangChain ≈ 1/18,000 of Nvidia).
+
+<!--
+Figures mid-2026. *Anthropic ~$45B is gross (books cloud-reseller spend);
+~$22B net — always ask gross or net. Anthropic just passed OpenAI. Punchline:
+the most-talked-about layer earns the least.
+-->
 
 ---
 
@@ -166,6 +238,12 @@ the most attention, captures the least money.
 
 The type isn't the *layer* — it's how the tech is **used**.
 
+<!--
+Ask the room: "Copilot — which type?" Efficiency. "ChatGPT launch?"
+Market-creating. Same LLM, different use → different type. AI coding = efficiency
+= cost-cutting, which sets up the math.
+-->
+
 ---
 
 ## Case · sales / support chatbot
@@ -175,13 +253,19 @@ The type isn't the *layer* — it's how the tech is **used**.
 *Caveat: cut too deep, rehired in 2025 — AI-first, not AI-only.*
 
 ```
-100,000 contacts/mo · human $5 · AI $1 · 67% deflection
+ILLUSTRATIVE — 100,000 contacts/mo · human $5 · AI $1 · 67% deflection
   AI handles  67,000 × $1 = $67k/mo
   vs humans   67,000 × $5 = $335k/mo
   net saving  ≈ $268k/mo  ≈ $3.2M/yr
 ```
 
 Players: Sierra · Decagon · Ada · Intercom Fin
+
+<!--
+Say out loud: these dollar numbers are illustrative, not Klarna's books. The
+$0.99/resolution is Intercom Fin's real public price. The Klarna rehire is the
+honest part — don't sell AI as headcount-zero.
+-->
 
 ---
 
@@ -197,6 +281,11 @@ Frees advisor time for client work; answers grounded in verified sources.
 
 Similar: Glean · Harvey · Hebbia
 
+<!--
+This is layer 3 (data/RAG) in production. Value here is time saved + better
+answers, not a flashy chatbot. Real, measured adoption (98%).
+-->
+
 ---
 
 ## The trap: vendor value vs operator value
@@ -209,6 +298,12 @@ books.
 > Klarna's $40M isn't an "AI app company" revenue line — it's on **Klarna's**
 > P&L. The app layer looks thin for vendors, yet is where operators win.
 
+<!--
+This resolves the apparent contradiction: pyramid says app layer is thin, but
+case studies show huge value. Two different questions. Most students in this
+room will be operators, not AI vendors — the value is on their side.
+-->
+
 ---
 
 <!-- _class: lead -->
@@ -216,6 +311,11 @@ books.
 # AI in DevOps
 
 Speed is easy to measure. Value is not.
+
+<!--
+Now the part most relevant to this class. Three beats: coding assistant, AIOps,
+and the DORA reality check.
+-->
 
 ---
 
@@ -225,7 +325,7 @@ Speed is easy to measure. Value is not.
 +15% merge rate, +84% successful builds.
 
 ```
-100 devs · ~$120k/dev/yr
+ILLUSTRATIVE — 100 devs · ~$120k/dev/yr
   freed capacity ≈ 30% × 55% ≈ 16% ≈ ~$1.9M/yr  (if realized)
   cost: Copilot $19/user/mo + tokens ≈ ~$30k/yr
   net ≈ ~$1.87M/yr
@@ -233,6 +333,12 @@ Speed is easy to measure. Value is not.
 
 Revenue flat ⇒ this is **cost-cutting**. Subscription is cheap; the risk is
 **non-realization** — freed time becomes slack, not savings.
+
+<!--
+"30% of dev time is coding" is an assumption — defend it: the rest is meetings,
+review, debugging, design. The real lesson: efficiency value is only real if you
+defer hires or ship more. Otherwise it's paper.
+-->
 
 ---
 
@@ -242,6 +348,7 @@ PagerDuty: **−91% alert noise** · K8s MTTR **20 → <3 min** ·
 HCL+Moogsoft: MTTR **−33%**, tickets **−62%**
 
 ```
+ILLUSTRATIVE
 SAVINGS  SRE time ~$12.8k/mo + downtime avoided ~$40k/mo ≈ $52.8k/mo
 COST     license + tokens + setup + maintenance       ≈ $20–30k/mo
 NET                                                    ≈ ~$28k/mo
@@ -249,6 +356,12 @@ NET                                                    ≈ ~$28k/mo
 
 A "−40% MTTR" headline says nothing about ROI until you **subtract the AI's own
 cost**.
+
+<!--
+This is the slide where I correct the naive pitch. Vendors quote only the
+savings. Make them net out license + tokens + setup + maintenance. Downtime
+avoided is usually the biggest line — but hardest to estimate honestly.
+-->
 
 ---
 
@@ -262,6 +375,12 @@ cost**.
 > and disciplined CI/CD, AI can make shipping *worse*. That gap is where DevOps
 > creates value.
 
+<!--
+The most important slide for this audience. AI is not a silver bullet. Your job
+— pipelines, testing, small batches — matters MORE in the AI era, not less. End
+the DevOps section on this.
+-->
+
 ---
 
 ## Takeaways
@@ -273,6 +392,11 @@ cost**.
 4. Always do the math with **both sides** — savings *and* the AI's own cost
 5. In DevOps, **fundamentals still win**
 
+<!--
+Recap in 30 seconds, then open Q&A. If short on time, slides 5 (layers),
+pyramid, and DORA are the must-keeps.
+-->
+
 ---
 
 <!-- _class: lead -->
@@ -283,3 +407,9 @@ cost**.
 Questions?
 
 *Speaker notes & full numbers: `README.md` and `docs/devops-cases.md`*
+
+<!--
+Likely questions: "should we train our own model?" (no — use/fine-tune/RAG);
+"will AI replace devs?" (Klarna rehired; DORA shows fundamentals win);
+"gross vs net revenue?" (Anthropic example).
+-->
