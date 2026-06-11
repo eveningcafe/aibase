@@ -74,29 +74,69 @@ scattered history into queryable **institutional memory**.
 This is layer 3 doing real work: without grounding, the model only knows generic
 text; with it, it knows *your* outages.
 
-## 4. Infrastructure as Code with AI
+## 4. Infrastructure as Code with AI — and its biggest risk
 
 *JD: design/operate platforms; automate with GenAI; risk of config/schema
 changes*
 
-LLMs now sit inside the Terraform / Pulumi workflow:
+AI can write a Terraform module in seconds. The danger isn't *bad* code — it's
+**plausible** code: code that looks right, so nobody reads it line-by-line.
 
-- **Generate** modules, resource blocks, and tfvars from a natural-language
-  prompt.
-- **Explain a plan** — ask *"why is this `terraform plan` destroying prod?"* and
-  get a summary without leaving the editor.
-- **Policy as code from plain English** — describe a rule; the AI emits a
-  Checkov / OPA policy with contextual explanations.
-- **Drift detection + remediation** — scheduled read-only `plan`, AI flags and
-  suggests fixes.
+### The plausible-code problem
 
-**Tools:** Pulumi Neo (NL → Pulumi programs; Enterprise $400/mo adds drift +
-remediation), env0, Spacelift (OPA policy + orchestration), Terraform MCP
-server, Checkov with OpenAI remediation.
+A 200-line AI-written module — network rules, IAM, storage — generated in ~30 s.
+The dev skims the structure, sees no syntax errors, runs `terraform apply`. What
+goes unchecked:
 
-> Pair AI-generated IaC with scanners (tfsec ≈ 1000+ checks, Checkov) and
-> policy-as-code — the model **hallucinates**. The rule: **AI drafts, the
-> pipeline verifies.**
+- Security group with ingress `0.0.0.0/0`?
+- S3 bucket missing a public-access block?
+- RDS without encryption-at-rest?
+- IAM policy with `Resource: "*"`?
+- Secrets hardcoded in `tfvars`?
+
+Generate ~30 s, review <60 s. **Speed becomes a security hole when review turns
+into "tick the box."**
+
+Second risk — **mental-model loss**: when a team stops writing HCL by hand, it
+loses the model of its own infrastructure. Quick test: ask someone to explain an
+AI-generated module line-by-line with no docs. If >20% can't, that's a dangerous
+gap.
+
+**Anti-pattern (vibe-coding IaC to prod):** AI generates → `apply` → 💥, with no
+review, no scan, no policy gate.
+
+### What AI tends to get wrong (approx.)
+
+| # | Misconfiguration | Seen in | Why |
+|---|------------------|:------:|-----|
+| 1 | Security group `0.0.0.0/0` on 22/3389 | ~25% | common demo examples |
+| 2 | S3 missing public-access block | ~20% | not blocked by default |
+| 3 | RDS not encrypted | ~18% | encryption is opt-in |
+| 4 | IAM `Resource: "*"` | ~15% | convenient in demos |
+| 5 | Secrets in `tfvars` (no SOPS) | ~12% | pattern is in training data |
+| 6 | Missing tags | ~30% | tag policy is org-specific |
+| 7 | Hardcoded creds in provider block | ~5% | rarer, but critical |
+
+*(Frequencies are illustrative teaching figures, not a benchmark.)*
+
+### The 3-layer defense
+
+```
+1 · AI GENERATE    Claude Code + Terraform MCP
+                   constraint-first, security-first prompts
+        ↓
+2 · HUMAN REVIEW   read the plan, understand every resource
+                   ask the agent what you don't get — never approve blindly
+        ↓
+3 · POLICY GATE    tflint → checkov → terraform plan → conftest
+                   → AI explains the diff → human approves → apply
+                   RULE: checkov not clean (any HIGH) → no apply
+```
+
+Why all three: **L1** is fast but plausible-but-wrong; **L2** catches *intent*
+errors, but humans tire and skip; **L3** is automated and consistent — it catches
+the misconfigurations humans miss. The hard rule lives in L3: a failing checkov
+HIGH blocks `apply`, no exceptions.
 
 ## 5. CI/CD risk & guardrails — the frontier
 
@@ -111,30 +151,6 @@ Emerging and less mature than incident response:
 
 Honest take: far fewer proven products here than in RCA/observability —
 greenfield, and strong project territory for a platform team.
-
-## 6. The economics — net of the AI's own cost
-
-```
-ILLUSTRATIVE — AI-SRE for incident response
-SAVINGS
-  SRE time: 200 incidents/mo, MTTR 60→36 min (−40%), 2 SRE × $80/h
-    $32,000 → $19,200/mo  → save $12,800/mo
-  + downtime avoided (usually the bigger lever): 4 h/mo × $10k/h = $40,000/mo
-  gross ≈ $52,800/mo
-
-COST of the AI system:
-  platform license (Datadog/Rootly/Resolve.ai)  ~$10–20k/mo
-  tokens / inference                              ~$1–3k/mo
-  setup & integration (one-time ~$60k → yr1)      ~$5k/mo
-  tuning & maintenance (~0.3 FTE)                 ~$3k/mo
-                                                  ───────────
-  total ≈ ~$20–30k/mo
-
-NET ≈ $52,800 − ~$25,000 ≈ ~$28k/mo  (improves as setup amortizes)
-```
-
-A "−40% MTTR" headline says nothing about ROI until you subtract what the system
-costs to run: **license + tokens + setup + maintenance**.
 
 ---
 

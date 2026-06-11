@@ -385,24 +385,73 @@ queryable in natural language. The vector DB of incident history is the
 
 ---
 
-## Infrastructure as Code with AI
+## IaC with AI — the real risk
 
-Generate and reason about Terraform / Pulumi from natural language:
+The problem isn't *bad* code. It's **plausible** code — code nobody reads
+line-by-line anymore.
 
-- **Generate** modules, resource blocks, and tfvars from a prompt
-- **Explain a plan** — *"why is this `terraform plan` destroying prod?"*
-- **Policy as code** from plain English (Checkov / OPA rules)
-- **Drift detection** + remediation suggestions
+A 200-line Terraform module, AI-written in **30 s**. The dev skims it, sees no
+syntax errors, runs `apply`. What goes unchecked:
 
-**Tools:** Pulumi Neo · env0 · Spacelift · Terraform MCP server · Checkov + AI
+- Security group with ingress `0.0.0.0/0`?
+- S3 bucket missing a public-access block?
+- RDS without encryption-at-rest? · IAM policy with `Resource: "*"`?
+- Secrets hardcoded in `tfvars`?
 
-> Always pair AI-generated IaC with scanners (tfsec, Checkov) + policy-as-code.
-> The model hallucinates: **AI drafts, the pipeline verifies.**
+> **Anti-pattern:** AI generates Terraform → `apply` → 💥
+> (no review, no scan, no policy gate)
 
 <!--
-Squarely the DevOps day job. The killer use is "explain this plan" — turning a
-scary diff into a sentence. But the discipline line matters: never apply
-AI-written IaC unscanned. AI drafts; tfsec/Checkov/OPA gate it.
+Core message of this part. Generate ~30s, review <60s — speed becomes a security
+hole when review turns into "tick the box." Second risk: mental-model loss. If a
+team stops writing HCL by hand, ask someone to explain an AI module line-by-line
+with no docs — if >20% can't, that's a dangerous gap.
+-->
+
+---
+
+## What AI tends to get wrong
+
+Common misconfigurations in AI-generated Terraform (approx.):
+
+| # | Misconfiguration | Seen in | Why |
+|---|------------------|:------:|-----|
+| 1 | Security group `0.0.0.0/0` on 22/3389 | ~25% | common demo examples |
+| 2 | S3 missing public-access block | ~20% | not blocked by default |
+| 3 | RDS not encrypted | ~18% | encryption is opt-in |
+| 4 | IAM `Resource: "*"` | ~15% | convenient in demos |
+| 5 | Secrets in `tfvars` (no SOPS) | ~12% | pattern is in training data |
+| 6 | Missing tags | ~30% | tag policy is org-specific |
+| 7 | Hardcoded creds in provider block | ~5% | rarer, but critical |
+
+<!--
+Frequencies are illustrative teaching figures, not a benchmark. The pattern is
+real: the model reproduces demo-grade defaults, which are exactly wrong for prod.
+-->
+
+---
+
+## The 3-layer defense
+
+```
+1 · AI GENERATE    Claude Code + Terraform MCP
+                   constraint-first, security-first prompts
+        ↓
+2 · HUMAN REVIEW   read the plan, understand every resource
+                   ask the agent what you don't get — never approve blindly
+        ↓
+3 · POLICY GATE    tflint → checkov → terraform plan → conftest
+                   → AI explains the diff → human approves → apply
+                   RULE: checkov not clean (any HIGH) → no apply
+```
+
+L1 is fast but **plausible-but-wrong** · L2 catches *intent*, but humans tire ·
+L3 is automated & consistent — it catches what humans miss.
+
+<!--
+This is the payoff pattern. No single layer is enough: speed (L1) needs judgment
+(L2) needs an automated gate (L3). The hard rule lives in L3 — a failing checkov
+HIGH blocks apply, no exceptions. That's how you keep AI's speed without its risk.
 -->
 
 ---
@@ -421,26 +470,6 @@ Emerging, less mature than incident response:
 <!--
 Area 4 of the JD. Be candid: this is greenfield. Great project territory for
 students — risk scoring and auto-rollback from historical outcomes.
--->
-
----
-
-## The economics (net of the AI's own cost)
-
-```
-ILLUSTRATIVE — AI-SRE for incident response
-SAVINGS  SRE time ~$12.8k/mo + downtime avoided ~$40k/mo ≈ $52.8k/mo
-COST     license + tokens + setup + maintenance       ≈ $20–30k/mo
-NET                                                    ≈ ~$28k/mo
-```
-
-A "−40% MTTR" headline says nothing about ROI until you **subtract the AI's own
-cost**: license + tokens + setup + maintenance.
-
-<!--
-Same discipline as the chatbot math. Vendors quote only savings. Downtime
-avoided is usually the biggest line but hardest to estimate honestly. Numbers
-illustrative.
 -->
 
 ---
