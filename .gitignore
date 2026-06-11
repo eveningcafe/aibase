@@ -1,6 +1,9 @@
 # --- aibase local-only docs ---
 docs/ai-stack-transcript.md
 
+# --- rendered slide preview (regenerate from slides.md) ---
+slides.html
+
 # --- Python ---
 __pycache__/
 *.py[cod]

@@ -27,6 +27,107 @@ aibase/
 | 4 | **Orchestration** | Break tasks into thinking → execution → review. Protocols like MCP. |
 | 5 | **Application** | Interfaces (text/image/audio…) and integrations with other tools. |
 
+## Where the money is today — the revenue pyramid
+
+Revenue across the stack is a pyramid: the closer a layer sits to the
+**hardware at the base**, the more of today's money it captures (2025).
+
+```
+                    ┌──────────────┐
+                    │     APPS     │  L5 · fragmented, many startups
+                  ┌─┴──────────────┴─┐
+                  │  ORCHESTRATION   │  L4 · LangChain ~$14M ARR — max hype, min revenue
+                ┌─┴──────────────────┴─┐
+                │        DATA          │  L3 · Scale AI ~$2B · vector-DB mkt ~$2.5B
+              ┌─┴──────────────────────┴─┐
+              │   FOUNDATION MODELS      │  L2 · OpenAI ~$13–20B · Anthropic ~$4B
+            ┌─┴──────────────────────────┴─┐
+            │   INFRASTRUCTURE / CHIPS      │  L1 · Nvidia ~$115B→$200B · capex $250B+/yr
+            └──────────────────────────────┘
+                    base = most $ captured today
+```
+
+| Layer | Who | Revenue (2025) |
+|-------|-----|----------------|
+| **1 · Infrastructure / chips** | Nvidia data-center | ~$115B → ~$200B run-rate; capex $250B+/yr |
+| **2 · Foundation models** | OpenAI / Anthropic | ~$13–20B / ~$3.8B |
+| **3 · Data** | Scale AI; vector DBs | ~$2B; vector-DB market ~$2.5B |
+| **4 · Orchestration** | LangChain | ~$14M ARR |
+| **5 · Applications** | thousands of startups | fragmented, individually small |
+
+Two things to notice: revenue concentrates at the base (Nvidia alone earns more
+than every model company combined), and **hype ≠ revenue** — the orchestration
+layer gets the most attention but captures the least money today. Value is
+expected to shift up toward applications over time, as it did when cloud value
+moved from AWS infrastructure to SaaS apps.
+
+## The three types of innovation
+
+A lens for reading any AI product. Clayton Christensen (Harvard, *The
+Innovator's Dilemma*) splits innovation into three types:
+
+| Type | Idea | Effect on jobs | AI example |
+|------|------|----------------|------------|
+| **Market-creating** | Make something expensive/hard → cheap & easy for everyone, opening a *new* market | Creates jobs | Foundation models that put AI in everyone's hands |
+| **Sustaining** | Make a good product *better* | Roughly neutral | Adding an AI feature to an app you already use |
+| **Efficiency** | Do the *same work with less* | Tends to reduce jobs | AI coding assistants, automation, summarization |
+
+The type is *not* decided by the layer — it's decided by *how the technology
+gets used*. The same model can create a new market, improve a product, or cut
+costs. Reading an AI launch, ask: *which of the three is this?*
+
+## Case studies
+
+### Sales / support chatbot — layers 4–5, grounded by 3
+
+Klarna's AI assistant (built on OpenAI) handled 2.3M chats in its first month —
+the work of **700 full-time agents** — automating **67%** of conversations,
+cutting resolution from 11 min to under 2 min, and driving a **~$40M profit
+improvement** in 2024. Caveat: in 2025 Klarna said it had cut human staff too
+far and rehired for premium support — AI-first, not AI-only.
+
+Others in the space: Sierra, Decagon, Ada, Intercom Fin (public price ~$0.99 per
+resolution).
+
+**CEO math** — a mid-size store, 100,000 support contacts/month:
+
+```
+human cost       ~$5 / contact      (fully loaded)
+AI cost          ~$1 / resolution   (Intercom Fin public price)
+AI deflection    67%                (Klarna / Fin benchmark)
+
+AI handles       100,000 × 67%    = 67,000 contacts
+  cost on AI     67,000 × $1      = $67,000 / mo
+  same on humans 67,000 × $5      = $335,000 / mo
+  ──────────────────────────────────────────────
+  net saving     ≈ $268,000 / mo  ≈ $3.2M / yr
+```
+
+The lever is **volume × deflection rate × (human − AI cost)**, plus 24/7 and
+multilingual coverage.
+
+### RAG over internal documents — layer 3
+
+Morgan Stanley indexed **350,000 research documents (40M words)** with RAG.
+Before: a query meant 30+ minutes of manual search, and advisors reached only
+~20% of the knowledge base. After: instant answers, **98% of advisor teams** use
+it, and document access rose from 20% to 80% — freeing advisor time for
+revenue-generating client work, with answers grounded in verified sources.
+
+Similar: Glean (enterprise search), Harvey (legal), Hebbia (finance).
+
+### Why these thrive even though the pyramid calls the top "thin"
+
+The pyramid measures who earns money **selling** AI tooling — there the base
+wins. These case studies measure value created by **applying** AI to your own
+business — and that value lands on the operator's books, not an AI vendor's.
+Klarna's $40M isn't any "AI app company" revenue; it's a line on Klarna's P&L.
+So the application layer looks thin for vendors yet is where operators capture
+the most. Two different questions, two different winners.
+
+For DevOps-specific cases (Copilot, AIOps) with full cost-and-savings math, see
+[`docs/devops-cases.md`](docs/devops-cases.md).
+
 ## Getting started
 
 Each layer directory has its own `README.md` describing scope and intended
