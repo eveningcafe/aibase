@@ -40,7 +40,7 @@ numbers are illustrative — the method matters, not the exact dollars.
 2. **The 5 layers** — infra → models → data → orchestration → application
 3. **The business view** — revenue pyramid · 3 types of innovation
 4. **Case studies** — chatbot · RAG · the vendor-vs-operator trap
-5. **GenAI for SRE** — incident RCA · observability · CI/CD risk · DORA
+5. **GenAI for DevOps** — incident RCA · observability · IaC · CI/CD risk
 6. **Takeaways**
 
 <!--
@@ -308,19 +308,17 @@ room will be operators, not AI vendors — the value is on their side.
 
 <!-- _class: lead -->
 
-# GenAI for SRE
-
-Not coding assistants — reliability, observability, and incident response.
+# GenAI for DevOps
 
 <!--
-Reframe: coding assistants help app devs, not platform/SRE. This section is the
-GenAI-for-SRE job: triage, RCA, runbooks, observability, CI/CD risk. And it's
-the capstone — it uses every layer we just covered.
+The platform/DevOps job: incident triage, RCA, runbooks, observability, IaC, and
+CI/CD risk. It's the capstone — it uses every layer we just covered. (Coding
+assistants are dev productivity — a different thing.)
 -->
 
 ---
 
-## An AI-SRE agent = the whole stack
+## An AI agent for ops = the whole stack
 
 ```
   5 · APPLICATION    Slack on-call copilot · NL query · Datadog/PagerDuty
@@ -344,18 +342,20 @@ engineer in Slack. Map each to the JD they'll be hiring against.
 
 ## Incident triage, RCA & remediation
 
-Autonomous AI-SRE agents investigate alerts, correlate signals, and propose root
-cause + fix:
+An AI agent watches alerts, reads logs / metrics / traces, and proposes a root
+cause and a fix.
 
-- **Cleric** · **Resolve.ai** (targets 80% auto-resolution) · **Traversal**
-- **Rootly** · **incident.io** (Netflix, Etsy, 600+) · **Datadog Bits AI SRE**
+**Tools:** Cleric · Resolve.ai · Traversal · Rootly · incident.io · Datadog Bits AI
 
-Credible numbers (named, not just marketing):
-- **Traversal @ American Express**: **82% RCA accuracy**, **−32% MTTR**, 250B log lines/day
-- **Microsoft RCACopilot**: **~0.77 RCA accuracy**, in use 4 yrs across 30+ teams
+**Proven in production:**
 
-> Most vendor "38–90% MTTR" claims are self-reported. Autonomous remediation is
-> still **human-in-the-loop**.
+| Where | Result |
+|-------|--------|
+| Traversal @ American Express | 82% RCA accuracy · −32% MTTR |
+| Microsoft RCACopilot | ~0.77 RCA accuracy · 4 yrs, 30+ teams |
+
+> Vendor "38–90% MTTR" claims are self-reported. Remediation stays
+> **human-in-the-loop**.
 
 <!--
 Area 1+2 of the JD. Stress: the credible numbers come with a named customer or a
@@ -385,22 +385,42 @@ queryable in natural language. The vector DB of incident history is the
 
 ---
 
+## Infrastructure as Code with AI
+
+Generate and reason about Terraform / Pulumi from natural language:
+
+- **Generate** modules, resource blocks, and tfvars from a prompt
+- **Explain a plan** — *"why is this `terraform plan` destroying prod?"*
+- **Policy as code** from plain English (Checkov / OPA rules)
+- **Drift detection** + remediation suggestions
+
+**Tools:** Pulumi Neo · env0 · Spacelift · Terraform MCP server · Checkov + AI
+
+> Always pair AI-generated IaC with scanners (tfsec, Checkov) + policy-as-code.
+> The model hallucinates: **AI drafts, the pipeline verifies.**
+
+<!--
+Squarely the DevOps day job. The killer use is "explain this plan" — turning a
+scary diff into a sentence. But the discipline line matters: never apply
+AI-written IaC unscanned. AI drafts; tfsec/Checkov/OPA gate it.
+-->
+
+---
+
 ## CI/CD risk & guardrails (the frontier)
 
 Emerging, less mature than incident response:
 
 - **Blast-radius analysis** — LLM predicts what a change can break
-- **Risk scoring** of config/schema changes *before* rollout
+- **Risk scoring** of config / schema changes *before* rollout
 - **Auto validation & rollback** informed by historical outcomes
 
-> Honest take: fewer proven products here than in RCA/observability. This is
-> where a platform team can build real differentiation — and where the DORA
-> warning bites hardest.
+> Honest take: fewer proven products here than in RCA/observability — strong
+> territory for a platform team to build real differentiation.
 
 <!--
 Area 4 of the JD. Be candid: this is greenfield. Great project territory for
-students. Naturally leads into DORA — speed at the deploy gate without
-discipline is dangerous.
+students — risk scoring and auto-rollback from historical outcomes.
 -->
 
 ---
@@ -425,24 +445,6 @@ illustrative.
 
 ---
 
-## The counterpoint (DORA 2024)
-
-- **75.9%** of devs use AI daily · ~75% feel more productive
-- **But:** delivery **throughput −1.5%**, **stability −7.2%** as adoption rose
-- Cause: batch sizes grow, trust in AI output rises
-
-> **Individual speed ≠ delivery performance.** Without small batches, testing,
-> and disciplined CI/CD, AI can make shipping *worse*. That gap is where DevOps
-> creates value.
-
-<!--
-The most important slide for this audience. AI is not a silver bullet. Your job
-— pipelines, testing, small batches — matters MORE in the AI era, not less. End
-the DevOps section on this.
--->
-
----
-
 ## Takeaways
 
 1. AI is a **stack**, not a model — infra → models → data → orchestration → app
@@ -450,11 +452,11 @@ the DevOps section on this.
    **operator**
 3. Name the innovation type: **market-creating / sustaining / efficiency**
 4. Always do the math with **both sides** — savings *and* the AI's own cost
-5. In DevOps, **fundamentals still win**
+5. In DevOps, **AI drafts — your pipeline verifies**
 
 <!--
 Recap in 30 seconds, then open Q&A. If short on time, slides 5 (layers),
-pyramid, and DORA are the must-keeps.
+the pyramid, and the AI-agent-as-whole-stack are the must-keeps.
 -->
 
 ---
@@ -470,6 +472,6 @@ Questions?
 
 <!--
 Likely questions: "should we train our own model?" (no — use/fine-tune/RAG);
-"will AI replace devs?" (Klarna rehired; DORA shows fundamentals win);
+"will AI replace devs?" (Klarna rehired; remediation stays human-in-the-loop);
 "gross vs net revenue?" (Anthropic example).
 -->

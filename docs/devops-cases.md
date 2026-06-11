@@ -74,7 +74,31 @@ scattered history into queryable **institutional memory**.
 This is layer 3 doing real work: without grounding, the model only knows generic
 text; with it, it knows *your* outages.
 
-## 4. CI/CD risk & guardrails — the frontier
+## 4. Infrastructure as Code with AI
+
+*JD: design/operate platforms; automate with GenAI; risk of config/schema
+changes*
+
+LLMs now sit inside the Terraform / Pulumi workflow:
+
+- **Generate** modules, resource blocks, and tfvars from a natural-language
+  prompt.
+- **Explain a plan** — ask *"why is this `terraform plan` destroying prod?"* and
+  get a summary without leaving the editor.
+- **Policy as code from plain English** — describe a rule; the AI emits a
+  Checkov / OPA policy with contextual explanations.
+- **Drift detection + remediation** — scheduled read-only `plan`, AI flags and
+  suggests fixes.
+
+**Tools:** Pulumi Neo (NL → Pulumi programs; Enterprise $400/mo adds drift +
+remediation), env0, Spacelift (OPA policy + orchestration), Terraform MCP
+server, Checkov with OpenAI remediation.
+
+> Pair AI-generated IaC with scanners (tfsec ≈ 1000+ checks, Checkov) and
+> policy-as-code — the model **hallucinates**. The rule: **AI drafts, the
+> pipeline verifies.**
+
+## 5. CI/CD risk & guardrails — the frontier
 
 *JD: blast-radius analysis, deployment guardrails, risk of config/schema
 changes, automated validation & rollback*
@@ -85,11 +109,10 @@ Emerging and less mature than incident response:
 - **Risk scoring** of config/schema changes prior to rollout.
 - **Automated validation & rollback** informed by historical outcomes.
 
-Honest take: far fewer proven products here than in RCA/observability. This is
-greenfield — strong project territory, and exactly where the DORA warning
-(below) bites hardest.
+Honest take: far fewer proven products here than in RCA/observability —
+greenfield, and strong project territory for a platform team.
 
-## 5. The economics — net of the AI's own cost
+## 6. The economics — net of the AI's own cost
 
 ```
 ILLUSTRATIVE — AI-SRE for incident response
@@ -113,22 +136,6 @@ NET ≈ $52,800 − ~$25,000 ≈ ~$28k/mo  (improves as setup amortizes)
 A "−40% MTTR" headline says nothing about ROI until you subtract what the system
 costs to run: **license + tokens + setup + maintenance**.
 
-## 6. The counterpoint — DORA 2024
-
-*Why fundamentals still win*
-
-- **75.9%** of developers use AI daily; ~75% report individual productivity
-  gains.
-- **But** as AI adoption rose, delivery **throughput fell ~1.5%** and delivery
-  **stability fell ~7.2%**.
-- Cause: batch sizes grow and trust in AI output rises — so small batches,
-  testing, and disciplined CI/CD matter *more*, not less.
-
-The lesson for a platform/SRE engineer: **individual speed ≠ delivery
-performance.** GenAI accelerates investigation and toil reduction, but reliability
-still comes from the fundamentals — SLOs, error budgets, small batches, tested
-rollbacks. That discipline is exactly where the role adds value.
-
 ---
 
 ## Sources
@@ -137,4 +144,4 @@ rollbacks. That discipline is exactly where the role adds value.
 - [Bits AI SRE — Datadog](https://www.datadoghq.com/blog/bits-ai-sre-deeper-reasoning/)
 - [AI SRE guide — Rootly](https://rootly.com/ai-sre-guide)
 - [Automatic RCA via LLMs for cloud incidents (RCACopilot) — Microsoft Research](https://www.microsoft.com/en-us/research/publication/automatic-root-cause-analysis-via-large-language-models-for-cloud-incidents/)
-- [Accelerate State of DevOps Report 2024 — DORA](https://dora.dev/research/2024/dora-report/)
+- [Using Terraform with AI — Spacelift](https://spacelift.io/blog/terraform-ai)
