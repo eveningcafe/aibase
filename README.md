@@ -130,8 +130,8 @@ Klarna's $40M isn't any "AI app company" revenue; it's a line on Klarna's P&L.
 So the application layer looks thin for vendors yet is where operators capture
 the most. Two different questions, two different winners.
 
-For DevOps-specific cases (Copilot, AIOps) with full cost-and-savings math, see
-[`docs/devops-cases.md`](docs/devops-cases.md).
+For GenAI-for-SRE cases (incident RCA, observability, CI/CD risk) with full
+cost-and-savings math, see [`docs/devops-cases.md`](docs/devops-cases.md).
 
 ## Getting started
 

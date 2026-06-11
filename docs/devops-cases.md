@@ -1,96 +1,119 @@
-# AI in DevOps — case studies & the math
+# GenAI for SRE — case studies & the math
 
-How AI lands on the DevOps/SRE workflow, with real numbers and honest economics
-(both the savings *and* the cost of running the AI). Maps to the stack:
-**coding assistants** live in the application layer; **AIOps** spans
-orchestration + application.
+AI for platform reliability and SRE — *not* coding assistants (those help app
+developers, a different job). This is the GenAI-for-SRE role: incident triage,
+RCA, runbooks, observability, and CI/CD risk.
 
-> Every figure below is illustrative unless cited. The point is the *method* of
-> reasoning, not the exact numbers.
+The punchline for this course: **an AI-SRE agent exercises the entire stack.**
 
-## Two cost models
+```
+5 · APPLICATION    Slack on-call copilot · NL query · Datadog/PagerDuty
+4 · ORCHESTRATION  agent: query logs/metrics/traces → traverse deps → RCA → fix
+3 · DATA           vector DB (FAISS/Weaviate): telemetry + incidents + runbooks
+2 · MODELS         LLM, prompt-engineered/fine-tuned for logs & remediation
+1 · INFRASTRUCTURE GPUs to run it
+```
 
-| | Coding assistant (SaaS) | AIOps / a system you operate |
-|---|---|---|
-| Main cost | **Subscription** ($19–39/user/mo) | Platform license + **tokens** + setup + maintenance |
-| Tokens | Bundled; overage billed on top | Pay per volume (input/output) |
-| Training | None — model is pre-built | Usually *tuning/integration*, not training from scratch |
+> Figures are as of mid-2026. The dollar math is illustrative — the method
+> matters, not the exact numbers.
 
 ---
 
-## 1. Coding assistant — GitHub Copilot
+## 1. Incident triage, RCA & remediation
 
-*Application layer · efficiency innovation (cost-cutting)*
+*JD: automate incident triage, remediation, postmortems; on-call copilots; RCA;
+self-healing runbooks*
 
-In a randomized trial with Accenture, GitHub Copilot let developers code **~55%
-faster**, with **+8.7% pull requests**, a **+15% merge rate**, and **+84%
-successful builds**. 90% of developers reported feeling more fulfilled; 81%
-installed it the same day.
+Autonomous AI-SRE agents watch alerts, pull logs/metrics/traces, traverse
+dependency graphs, and reason across multiple steps to a root cause and a
+proposed fix.
 
-### The math — this is cost-cutting, not revenue growth
+**Tools:** Cleric (Gartner Cool Vendor 2025), Resolve.ai (targets 80%
+auto-resolution; $1B valuation, Dec 2025), Traversal, Rootly (Slack-native;
+Canva, Grammarly, Squarespace), incident.io (Netflix, Etsy, 600+ companies),
+Datadog Bits AI SRE.
 
-If productivity rises but company revenue is flat, the gain is **efficiency**:
-freed engineering capacity. That capacity is only money if you convert it.
+**Credible, named numbers** (vs. self-reported marketing):
+
+- **Traversal @ American Express** — **82% RCA accuracy**, **−32% MTTR**, across
+  **250B log lines/day**.
+- **Microsoft RCACopilot** — **~0.77 RCA accuracy** on a year of real incidents;
+  diagnostic collection in use **4+ years** across **30+ teams**; adds retrieval
+  augmentation + per-incident-type diagnostic workflows.
+
+**Honest caveats:** vendor "38–90% MTTR reduction" claims are mostly
+self-reported and not independently benchmarked. Autonomous remediation is still
+**human-in-the-loop** — the AI proposes, a human approves production actions.
+
+## 2. Observability & anomaly detection
+
+*JD: integrate GenAI with Datadog/Prometheus/Grafana/OpenTelemetry; natural-
+language querying of platform health; SLIs/SLOs*
+
+- **Datadog Bits Assistant** — query dashboards, logs, traces, and incidents in
+  plain language; no query-syntax expertise needed.
+- **Grafana Assistant** — natural-language telemetry questions + ML-based
+  correlation to flag anomalies.
+- **Datadog Toto** — a timeseries foundation model powering anomaly detection
+  and forecasting (Watchdog, Bits AI).
+
+The shift: SLI/SLO and pipeline health become **queryable in natural language**,
+and anomalies surface proactively instead of waiting on static thresholds.
+
+## 3. RAG over telemetry & incident history
+
+*JD: leverage vector databases (FAISS, Weaviate) to retrieve telemetry and
+incident history for GenAI prompts*
+
+AI-SRE grounds the LLM in **your** system via RAG: logs, metrics, traces,
+runbooks, deployment metadata, and past postmortems are embedded and stored in a
+**vector database (FAISS / Weaviate)**. At incident time the agent retrieves the
+most relevant prior incidents and runbook steps and reasons over them — turning
+scattered history into queryable **institutional memory**.
+
+This is layer 3 doing real work: without grounding, the model only knows generic
+text; with it, it knows *your* outages.
+
+## 4. CI/CD risk & guardrails — the frontier
+
+*JD: blast-radius analysis, deployment guardrails, risk of config/schema
+changes, automated validation & rollback*
+
+Emerging and less mature than incident response:
+
+- **Blast-radius analysis** — predict what a change can break before merge.
+- **Risk scoring** of config/schema changes prior to rollout.
+- **Automated validation & rollback** informed by historical outcomes.
+
+Honest take: far fewer proven products here than in RCA/observability. This is
+greenfield — strong project territory, and exactly where the DORA warning
+(below) bites hardest.
+
+## 5. The economics — net of the AI's own cost
 
 ```
-Team: 100 devs, fully-loaded ~$120k/dev/yr
-
-BENEFIT (real only if realized):
-  coding ≈ 30% of a dev's time · Copilot ~55% faster at coding
-  freed capacity ≈ 30% × 55% ≈ ~16% per dev
-  ≈ 16 devs' worth ≈ ~$1.9M/yr
-  → becomes money only via fewer/deferred hires OR more revenue-driving output
-
-COST:
-  Copilot Business  $19 × 100 × 12        = $22,800/yr
-  + token overage (usage-based billing)   = variable
-                                            ─────────────
-                                            ~$25–30k/yr
-
-NET (if realized) ≈ $1.9M − ~$30k ≈ ~$1.87M/yr
-```
-
-The subscription is cheap; the real risk is **non-realization** — freed time
-becomes slack, not savings. Revenue flat + headcount flat ⇒ the saving exists
-only on paper.
-
-## 2. AIOps — incident response
-
-*Orchestration + application · efficiency innovation*
-
-- **PagerDuty AIOps**: cuts alert noise by up to **91%** (correlates thousands
-  of alerts into one "situation").
-- **PagerDuty + Rundeck**: MTTR for a K8s pod failure dropped from **20 min to
-  under 3 min** via automatic pod restarts.
-- **HCL + Moogsoft**: MTTR **−33%**, 85% event consolidation, help-desk tickets
-  **−62%**.
-- **CMC Networks**: MTTR **−38%**. SolarWinds: AI saves an average of **4.87
-  hours per incident**.
-
-### The math — count the AI's own cost too
-
-```
-SAVINGS:
+ILLUSTRATIVE — AI-SRE for incident response
+SAVINGS
   SRE time: 200 incidents/mo, MTTR 60→36 min (−40%), 2 SRE × $80/h
     $32,000 → $19,200/mo  → save $12,800/mo
   + downtime avoided (usually the bigger lever): 4 h/mo × $10k/h = $40,000/mo
   gross ≈ $52,800/mo
 
 COST of the AI system:
-  platform license (PagerDuty / Moogsoft)   ~$10–20k/mo
-  tokens / inference                          ~$1–3k/mo
-  setup & integration (one-time ~$60k → yr1)  ~$5k/mo
-  tuning & maintenance (~0.3 FTE)             ~$3k/mo
-                                              ───────────
+  platform license (Datadog/Rootly/Resolve.ai)  ~$10–20k/mo
+  tokens / inference                              ~$1–3k/mo
+  setup & integration (one-time ~$60k → yr1)      ~$5k/mo
+  tuning & maintenance (~0.3 FTE)                 ~$3k/mo
+                                                  ───────────
   total ≈ ~$20–30k/mo
 
 NET ≈ $52,800 − ~$25,000 ≈ ~$28k/mo  (improves as setup amortizes)
 ```
 
-A "40% MTTR cut" headline says nothing about ROI until you subtract what the
-system costs to run: license + tokens + setup + maintenance.
+A "−40% MTTR" headline says nothing about ROI until you subtract what the system
+costs to run: **license + tokens + setup + maintenance**.
 
-## 3. The counterpoint — DORA 2024
+## 6. The counterpoint — DORA 2024
 
 *Why fundamentals still win*
 
@@ -101,15 +124,17 @@ system costs to run: license + tokens + setup + maintenance.
 - Cause: batch sizes grow and trust in AI output rises — so small batches,
   testing, and disciplined CI/CD matter *more*, not less.
 
-The lesson for a DevOps engineer: **individual speed ≠ delivery performance.**
-AI speeds up writing code; without the fundamentals, it can make shipping
-*worse*. That gap is exactly where DevOps creates value.
+The lesson for a platform/SRE engineer: **individual speed ≠ delivery
+performance.** GenAI accelerates investigation and toil reduction, but reliability
+still comes from the fundamentals — SLOs, error budgets, small batches, tested
+rollbacks. That discipline is exactly where the role adds value.
 
 ---
 
 ## Sources
 
-- [Copilot × Accenture study — GitHub Blog](https://github.blog/news-insights/research/research-quantifying-github-copilots-impact-in-the-enterprise-with-accenture/)
-- [Copilot plans & pricing — GitHub](https://github.com/features/copilot/plans)
-- [AIOps incident resolution — PagerDuty](https://www.pagerduty.com/resources/aiops/learn/aiops-use-cases-incident-resolution/)
+- [Best AI SRE tools 2026 — Prommer](https://prommer.net/en/tech/guides/best-ai-sre-tools-2026/)
+- [Bits AI SRE — Datadog](https://www.datadoghq.com/blog/bits-ai-sre-deeper-reasoning/)
+- [AI SRE guide — Rootly](https://rootly.com/ai-sre-guide)
+- [Automatic RCA via LLMs for cloud incidents (RCACopilot) — Microsoft Research](https://www.microsoft.com/en-us/research/publication/automatic-root-cause-analysis-via-large-language-models-for-cloud-incidents/)
 - [Accelerate State of DevOps Report 2024 — DORA](https://dora.dev/research/2024/dora-report/)

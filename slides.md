@@ -40,7 +40,7 @@ numbers are illustrative — the method matters, not the exact dollars.
 2. **The 5 layers** — infra → models → data → orchestration → application
 3. **The business view** — revenue pyramid · 3 types of innovation
 4. **Case studies** — chatbot · RAG · the vendor-vs-operator trap
-5. **AI in DevOps** — Copilot · AIOps · the DORA counterpoint
+5. **GenAI for SRE** — incident RCA · observability · CI/CD risk · DORA
 6. **Takeaways**
 
 <!--
@@ -308,64 +308,124 @@ room will be operators, not AI vendors — the value is on their side.
 
 <!-- _class: lead -->
 
-# AI in DevOps
+# GenAI for SRE
 
-Speed is easy to measure. Value is not.
+Not coding assistants — reliability, observability, and incident response.
 
 <!--
-Now the part most relevant to this class. Three beats: coding assistant, AIOps,
-and the DORA reality check.
+Reframe: coding assistants help app devs, not platform/SRE. This section is the
+GenAI-for-SRE job: triage, RCA, runbooks, observability, CI/CD risk. And it's
+the capstone — it uses every layer we just covered.
 -->
 
 ---
 
-## DevOps · coding assistant
-
-**GitHub Copilot (Accenture RCT):** **~55% faster**, +8.7% PRs,
-+15% merge rate, +84% successful builds.
+## An AI-SRE agent = the whole stack
 
 ```
-ILLUSTRATIVE — 100 devs · ~$120k/dev/yr
-  freed capacity ≈ 30% × 55% ≈ 16% ≈ ~$1.9M/yr  (if realized)
-  cost: Copilot $19/user/mo + tokens ≈ ~$30k/yr
-  net ≈ ~$1.87M/yr
+  5 · APPLICATION    Slack on-call copilot · NL query · Datadog/PagerDuty
+  4 · ORCHESTRATION  agent: query logs/metrics/traces → traverse deps → RCA
+  3 · DATA           vector DB (FAISS/Weaviate): telemetry + incidents + runbooks
+  2 · MODELS         LLM, prompt-engineered/fine-tuned for logs & remediation
+  1 · INFRASTRUCTURE GPUs to run it
 ```
 
-Revenue flat ⇒ this is **cost-cutting**. Subscription is cheap; the risk is
-**non-realization** — freed time becomes slack, not savings.
+This is *why* we learned the stack: a production SRE assistant exercises **all
+five layers** at once.
 
 <!--
-"30% of dev time is coding" is an assumption — defend it: the rest is meetings,
-review, debugging, design. The real lesson: efficiency value is only real if you
-defer hires or ship more. Otherwise it's paper.
+Payoff slide. Tie the whole lecture together. Walk bottom-up: the agent runs on
+GPUs, uses an LLM, grounds on a vector DB of your telemetry + past incidents +
+runbooks (RAG), orchestrates multi-step investigation, and meets the on-call
+engineer in Slack. Map each to the JD they'll be hiring against.
 -->
 
 ---
 
-## DevOps · AIOps (incident response)
+## Incident triage, RCA & remediation
 
-PagerDuty: **−91% alert noise** · K8s MTTR **20 → <3 min** ·
-HCL+Moogsoft: MTTR **−33%**, tickets **−62%**
+Autonomous AI-SRE agents investigate alerts, correlate signals, and propose root
+cause + fix:
+
+- **Cleric** · **Resolve.ai** (targets 80% auto-resolution) · **Traversal**
+- **Rootly** · **incident.io** (Netflix, Etsy, 600+) · **Datadog Bits AI SRE**
+
+Credible numbers (named, not just marketing):
+- **Traversal @ American Express**: **82% RCA accuracy**, **−32% MTTR**, 250B log lines/day
+- **Microsoft RCACopilot**: **~0.77 RCA accuracy**, in use 4 yrs across 30+ teams
+
+> Most vendor "38–90% MTTR" claims are self-reported. Autonomous remediation is
+> still **human-in-the-loop**.
+
+<!--
+Area 1+2 of the JD. Stress: the credible numbers come with a named customer or a
+published study; treat vendor ranges skeptically. Self-healing exists but humans
+approve production actions.
+-->
+
+---
+
+## Observability: ask telemetry in English
+
+NL querying + anomaly detection on top of your existing tools (Datadog,
+Prometheus, Grafana, OpenTelemetry):
+
+- **Datadog Bits Assistant** — query dashboards/logs/traces in plain language
+- **Grafana Assistant** — NL telemetry questions + ML correlation
+- **Datadog Toto** — timeseries foundation model powering anomaly forecasting
+
+Grounding = **RAG over telemetry + incident history + runbooks** in a vector DB
+(FAISS / Weaviate), so the LLM reasons over *your* system, not generic text.
+
+<!--
+Areas 2+3 of the JD. The big shift: SLI/SLO and platform health become
+queryable in natural language. The vector DB of incident history is the
+"institutional memory" — this is layer 3 doing real work in SRE.
+-->
+
+---
+
+## CI/CD risk & guardrails (the frontier)
+
+Emerging, less mature than incident response:
+
+- **Blast-radius analysis** — LLM predicts what a change can break
+- **Risk scoring** of config/schema changes *before* rollout
+- **Auto validation & rollback** informed by historical outcomes
+
+> Honest take: fewer proven products here than in RCA/observability. This is
+> where a platform team can build real differentiation — and where the DORA
+> warning bites hardest.
+
+<!--
+Area 4 of the JD. Be candid: this is greenfield. Great project territory for
+students. Naturally leads into DORA — speed at the deploy gate without
+discipline is dangerous.
+-->
+
+---
+
+## The economics (net of the AI's own cost)
 
 ```
-ILLUSTRATIVE
+ILLUSTRATIVE — AI-SRE for incident response
 SAVINGS  SRE time ~$12.8k/mo + downtime avoided ~$40k/mo ≈ $52.8k/mo
 COST     license + tokens + setup + maintenance       ≈ $20–30k/mo
 NET                                                    ≈ ~$28k/mo
 ```
 
 A "−40% MTTR" headline says nothing about ROI until you **subtract the AI's own
-cost**.
+cost**: license + tokens + setup + maintenance.
 
 <!--
-This is the slide where I correct the naive pitch. Vendors quote only the
-savings. Make them net out license + tokens + setup + maintenance. Downtime
-avoided is usually the biggest line — but hardest to estimate honestly.
+Same discipline as the chatbot math. Vendors quote only savings. Downtime
+avoided is usually the biggest line but hardest to estimate honestly. Numbers
+illustrative.
 -->
 
 ---
 
-## DevOps · the counterpoint (DORA 2024)
+## The counterpoint (DORA 2024)
 
 - **75.9%** of devs use AI daily · ~75% feel more productive
 - **But:** delivery **throughput −1.5%**, **stability −7.2%** as adoption rose
