@@ -1,0 +1,50 @@
+# --- aibase local-only docs ---
+docs/ai-stack-transcript.md
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.eggs/
+
+# --- Env & secrets ---
+.env
+.env.*
+*.local
+secrets/
+*.pem
+*.key
+
+# --- Models & data (large / local artifacts) ---
+*.bin
+*.safetensors
+*.gguf
+*.pt
+*.pth
+*.onnx
+data/raw/
+data/cache/
+*.faiss
+*.index
+
+# --- Node / frontend ---
+node_modules/
+dist/
+build/
+.next/
+*.log
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# --- Infra state ---
+*.tfstate
+*.tfstate.*
+.terraform/
