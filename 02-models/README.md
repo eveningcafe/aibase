@@ -1,40 +1,38 @@
 # 02 · Models
 
 The model is one important piece of the puzzle — not the whole thing. Builders
-have huge choice (2M+ models in catalogs like Hugging Face). This layer covers
-both **using** models and **building** them.
+have enormous choice (2M+ models in catalogs like Hugging Face), and this layer
+covers both **using** a model and **building** on one.
+
+## The lifecycle
+
+A model isn't a file you download once. It moves through a loop:
+
+```
+CHOOSE ─▶ REGISTER ─▶ SERVE ─▶ FINE-TUNE ─▶ EVALUATE ─▶ (loop back to serve)
+                                  (when needed)
+   MLOps wraps the whole loop: track · version · monitor
+```
+
+Two rules of thumb run through everything below:
+
+1. Need new **knowledge** (recent or private data)? Use **RAG**
+   ([`03-data/`](../03-data/)) — don't touch the model.
+2. Need new **behaviour** (tone, format, a specific skill)? **Fine-tune.**
+   Training from scratch is almost never the answer.
+
+The phases below follow the loop, and map onto the three hands-on
+[labs](#labs-run-on-a-free-kaggle-gpu): Serving (Lab 1), Fine-tuning (Lab 2),
+Evaluation (Lab 3).
 
 ---
 
-## The mental model: the lifecycle
+## Phase 1 · Choosing a model
 
-A model isn't a file you download once — it's something you **choose → serve →
-evaluate → (optionally) adapt → operate**. Everything below is a phase of that
-loop.
+You are rarely choosing "the best model" — you're choosing the best one for a
+**task, a budget, and a piece of hardware**. Three axes:
 
-```
-            ┌──────────────────────── MLOps (glue: track, version, monitor) ───────────────────────────┐
-            │                                                                                          │
-  CHOOSE ──▶ REGISTRY ──▶ SERVING ──▶ EVALUATION ──┐                                                   │
-   (open?     (what we    (run it,     (is it good   │  not good enough?                               │
-    size?      have, ids,  fp16/Q4,     enough?)     ├──▶ FINE-TUNE (LoRA/QLoRA)  ──▶ back to SERVING ─┘
-    spec?)     licenses)   tokens/s)                 └──▶ TRAIN (rare) ─────────────▶ back to SERVING
-```
-
-Two rules of thumb we keep coming back to:
-
-1. **Need new *knowledge*?** → don't touch the model; use **RAG** ([`03-data/`](../03-data/)).
-2. **Need new *behavior* (tone, format, a skill)?** → **fine-tune**. Train from
-   scratch almost never.
-
----
-
-## Phase 1 · Choosing a model — three dimensions
-
-You are almost never choosing "the best model" — you're choosing the best model
-**for a task, a budget, and a piece of hardware**. Three axes:
-
-### 1. Open vs proprietary
+### Open vs proprietary
 
 | | Open-weights (Llama, Qwen, Mistral, Gemma…) | Proprietary API (GPT, Claude, Gemini…) |
 |---|---|---|
@@ -44,72 +42,89 @@ You are almost never choosing "the best model" — you're choosing the best mode
 | **Customization** | Fine-tune the actual weights | Limited (their fine-tune API) |
 | **Ceiling** | Catching up fast | Usually the frontier |
 
-> "Open-weights" ≠ "open-source": you get the weights, not always the training
-> data or a permissive licence. **Always read the licence** (see Registry).
+"Open-weights" is not the same as "open-source": you get the weights, but not
+always the training data or a permissive licence — so read the licence before you
+commit (see Registry).
 
-### 2. Size — LLM vs SLM
+### Size — LLM vs SLM
 
-Bigger = more general reasoning, but more VRAM, slower, pricier. Smaller =
-cheaper, faster, runs on modest hardware — and often **specialized** to claw back
-quality on a narrow task.
+Bigger models reason more generally but cost more VRAM, run slower, and cost more
+per token. Smaller models are cheaper and faster, and are often **specialized** to
+recover quality on a narrow task.
 
-**The one number that governs everything on the lab box: VRAM.** A rough sizing
-rule for *weights only* (before KV cache / activations):
+The number that governs what you can run is **VRAM**. A rough rule for weights
+only (before KV cache and activations):
 
 ```
 VRAM for weights ≈ params × bytes-per-param
   fp16/bf16 → 2 bytes   |   fp8 → 1 byte   |   int4 (Q4) → ~0.5 byte
 ```
 
-**On our 32 GB RTX 5090:**
+On our lab GPU, a free Kaggle **T4 (16 GB)**:
 
 | Model size | fp16 weights | int4 (Q4) weights | Fits at fp16? | Fits at Q4? |
 |-----------:|-------------:|------------------:|:-------------:|:-----------:|
-| 3B  | ~6 GB  | ~2 GB  | ✅ easily | ✅ |
-| 7–8B | ~15 GB | ~4–5 GB | ✅ (room for KV cache) | ✅ |
-| 14B | ~28 GB | ~8 GB  | ⚠️ tight (little KV room) | ✅ |
-| 32B | ~64 GB | ~18 GB | ❌ | ✅ |
-| 70B | ~140 GB | ~40 GB | ❌ | ❌ (needs 2 GPUs) |
+| 3B  | ~6 GB  | ~2 GB  | yes | yes |
+| 7–8B | ~15 GB | ~4–5 GB | tight | yes |
+| 14B | ~28 GB | ~8 GB  | no | yes |
+| 32B | ~64 GB | ~18 GB | no | no (needs a bigger GPU) |
 
-This single table is *why quantization exists* and why a 32 GB card can still run
-a 32B model. We prove it live in **[Lab 1](labs/01-serving/)**.
+On a 16 GB card, quantization is what lets a 7B+ model fit with room for the KV
+cache — proven in [Lab 1](labs/cloud-kaggle/lab1_serving_kaggle.ipynb).
 
-### 3. Specialization
+### Specialization
 
-A model tuned for a job often beats a bigger generalist *on that job*:
+A model tuned for a job often beats a larger generalist on that job:
 
-- **Reasoning / "thinking"** (chain-of-thought, math, planning)
-- **Tool / function calling** (the agentic layer depends on this)
-- **Code** generation
-- **Language / region** strengths (e.g. strong Vietnamese)
-- **Multimodal** (vision, audio)
+- Reasoning (chain-of-thought, math, planning)
+- Tool / function calling — the agentic layer depends on this
+- Code generation
+- Language / region strengths (e.g. strong Vietnamese)
+- Multimodal (vision, audio)
 
-> Specialization and size go hand in hand: a fine-tuned 3B can beat a generic 70B
-> *on its one task* — that's the whole pitch for SLMs.
+A fine-tuned 3B can beat a generic 70B on its one task. That is the case for
+small, specialized models.
 
 ---
 
-## Phase 2 · Registry — what we have
+## Phase 2 · Registry
 
-Before serving anything, keep an honest catalog. Even a single table is a
-registry; mature shops use a tool (MLflow Model Registry, HF Hub, a DB).
+Before serving anything, keep an honest catalog of the models in use — even a
+single table counts; larger teams use a tool (MLflow Model Registry, the HF Hub,
+a database).
 
 | Field | Why it matters |
 |-------|----------------|
 | **id / version** | Reproducibility — "qwen2.5-3b-instruct @ <commit>" |
-| **size & precision** | Drives VRAM and the sizing table above |
-| **licence** | Can you use it commercially? Apache-2.0 vs Llama community vs research-only |
+| **size & precision** | Drives the VRAM math above |
+| **licence** | Commercial use? Apache-2.0 vs Llama community vs research-only |
 | **context length** | How much it can read at once |
 | **capabilities** | tools? vision? languages? |
 | **source & checksum** | Provenance + integrity |
 
-> Licence traps we'll mention: Llama's "community" licence has a 700M-MAU clause;
-> some "open" models are research-only. Qwen2.5 (Apache-2.0) is why we default to
-> it in the labs — no gating, commercial-friendly.
+### Licences — "open" is a spectrum
+
+"Open-weight" is not "open-source." You almost always get the weights, but rarely
+the full training data or code — and the licence attached ranges from truly
+permissive to commercial-use-with-strings.
+
+| Tier | Licence | You may… | Examples |
+|------|---------|----------|----------|
+| **Permissive** | MIT, Apache-2.0 | use commercially, fine-tune, redistribute, self-host — no strings | Qwen2.5 (Apache-2.0), DeepSeek (MIT), Mistral (Apache-2.0) |
+| **Conditional open-weight** | "community", "modified MIT", `license: other` | mostly — but with limits: user-count caps, attribution/branding, or written approval | Llama (community licence, 700M-MAU clause) |
+| **Restricted** | custom / non-commercial | research and evaluation only | various research-only releases |
+
+The economics behind permissive releases is *commoditize the complement*: give the
+weights away, monetize the layer around them (API, enterprise support, cloud). A
+free commodity model erodes closed-source vendors' pricing power and buys
+developer mindshare. Practical caution: a model can ship permissive early and
+**tighten its licence once it's valuable**, so read the licence on every release.
+We default to Qwen2.5 (Apache-2.0) in the labs because it is ungated and
+commercial-friendly.
 
 ---
 
-## Phase 3 · Serving — actually running it
+## Phase 3 · Serving
 
 Two questions decide your serving stack: **how fast** (latency vs throughput) and
 **how big** (precision / quantization).
@@ -118,211 +133,213 @@ Two questions decide your serving stack: **how fast** (latency vs throughput) an
 
 | Engine | Best for | Notes |
 |--------|----------|-------|
-| **Ollama** / llama.cpp | Laptops, demos, single users | GGUF + quantization built in; dead simple; CPU+GPU |
-| **vLLM** | Servers, many concurrent users | PagedAttention KV cache, continuous batching — high throughput; OpenAI-compatible API |
+| **Ollama** / llama.cpp | Laptops, demos, single users | GGUF + quantization built in; simple; CPU+GPU |
+| **vLLM** | Servers, many concurrent users | PagedAttention + continuous batching; high throughput; OpenAI-compatible API |
 | **TGI** (HF) | Production HF stack | Similar niche to vLLM |
 
-### The two memory costs
+### Two memory costs
 
 1. **Weights** — fixed (the sizing table above).
-2. **KV cache** — grows with **context length × concurrency**. This is the part
-   beginners forget: a 7B model at fp16 is ~15 GB, but serve 50 users at 8k
-   context and the KV cache can eat another 10 GB+. vLLM's PagedAttention exists
-   precisely to manage this.
+2. **KV cache** — grows with context length × concurrency. A 7B model at fp16 is
+   ~15 GB, but serving many users at long context can add another 10 GB+. vLLM's
+   PagedAttention exists to manage exactly this.
 
-### Quantization — the lever
+### Quantization
 
-Storing weights in fewer bits. Quality drops a little; VRAM and speed improve a
-lot.
+Storing weights in fewer bits. Quality drops a little; the memory footprint
+shrinks a lot, and on the right hardware it also runs faster.
 
 | Format | Bits | Where | Trade-off |
 |--------|:----:|-------|-----------|
-| **fp16/bf16** | 16 | training & high-fidelity serving | baseline quality, biggest |
-| **fp8** | 8 | Blackwell/Hopper serving | ~2× smaller, tiny quality loss |
-| **GGUF Qk_*** | ~4–5 | Ollama/llama.cpp | great for local; Q4_K_M is the sweet spot |
+| **fp16/bf16** | 16 | training & high-fidelity serving | baseline quality, largest |
+| **fp8** | 8 | Blackwell/Hopper serving | ~2× smaller, small quality loss |
+| **GGUF Qk_*** | ~4–5 | Ollama/llama.cpp | great for local; Q4_K_M is a common sweet spot |
 | **AWQ / GPTQ** | 4 | vLLM/GPU serving | 4-bit GPU inference, calibrated |
 
-> **Latency vs throughput**, said once: *latency* = how fast one user gets one
-> answer; *throughput* = total tokens/sec across everyone. vLLM trades a little
-> latency for big throughput via batching. Ollama optimizes the single-user feel.
+Latency is how fast one user gets one answer; throughput is total tokens/sec
+across everyone. vLLM trades a little latency for much higher throughput via
+batching; Ollama optimizes the single-user case.
 
-**→ [Lab 1: Serving + quantization](labs/01-serving/)** — serve one model
-(Qwen2.5-3B) at **fp16 vs Q4** on Ollama; measure tokens/s and VRAM and see Q4 use
-~½ the memory at ~1.5× the speed.
+**→ [Lab 1: Serving + quantization](labs/cloud-kaggle/lab1_serving_kaggle.ipynb)** —
+serve Qwen2.5-3B at fp16 vs Q4 on Ollama and measure tokens/s and VRAM. Q4 uses
+about half the memory. On the T4 it is not faster (no int4 acceleration); on a
+Blackwell GPU it would be. The memory win is universal; the speed win is
+hardware-dependent.
 
 ---
 
-## Phase 4 · Evaluation — is it actually good?
+## Phase 4 · Fine-tuning
 
-"It felt good in the demo" is not evaluation. You need numbers, before and after
-any change (a new model, a quant level, a fine-tune).
+Use this when the base model has the raw ability but not the **tone, format, or
+task behaviour** you need. It is far cheaper than training, and the most common
+way to "build" today.
 
-### Kinds of eval
+### Full vs parameter-efficient (PEFT)
+
+Full fine-tuning updates every weight — for a 7B model in fp16 that needs the
+weights plus gradients plus optimizer states, tens of GB beyond the model itself,
+out of reach of a 16 GB GPU for anything but tiny models.
+
+**LoRA** freezes the base model and trains small low-rank adapter matrices (often
+under 1% of the parameters). **QLoRA** goes further: it loads the frozen base in
+4-bit, then trains the adapter on top.
+
+| Method | What trains | VRAM (7B) | When |
+|--------|-------------|----------:|------|
+| **Full FT** | all weights | very high | rarely; small models / large clusters |
+| **LoRA** | small adapters, base in fp16/bf16 | ~18–24 GB | the default |
+| **QLoRA** | small adapters, base in 4-bit | ~8–12 GB | tight VRAM or a larger base |
+
+This is why a free 16 GB GPU can fine-tune a useful model: you are not moving the
+base weights, only learning a few million adapter numbers, and with QLoRA the
+frozen base is 4-bit so a 3B fits with room to spare. Afterwards you can merge the
+adapter back into the weights, or keep it separate and swap adapters per task.
+
+**→ [Lab 2: Fine-tune LoRA/QLoRA + MLflow](labs/cloud-kaggle/lab2_finetune_kaggle.ipynb)** —
+turn Qwen2.5-3B-Instruct into a task specialist with TRL/PEFT, track the run in
+MLflow, and compare before and after.
+
+---
+
+## Phase 5 · Evaluation
+
+A demo that "felt good" is not evidence. You need numbers, before and after any
+change — a new model, a quant level, or a fine-tune — which is why this phase
+closes the loop by comparing the base model against the tuned one.
 
 | Kind | What | Example |
 |------|------|---------|
 | **Benchmarks** | Standard academic tasks | MMLU, GSM8K, HumanEval, ARC |
-| **Task eval** | *Your* held-out set with a metric | exact-match, F1, JSON-valid % |
+| **Task eval** | Your held-out set with a metric | exact-match, F1, JSON-valid % |
 | **LLM-as-judge** | A strong model scores outputs | rate helpfulness 1–5 |
 | **Human eval** | People rate / prefer | A/B, pairwise preference |
 
-### Pitfalls we'll call out
+Three things to watch:
 
-- **Contamination** — benchmark answers leaked into training data. A high MMLU
-  can be memorization. Trust *your* held-out task eval more than leaderboard
-  numbers.
-- **Quantization quality** — measure it; don't assume Q4 ≈ fp16 for *your* task.
-- **One number lies** — report quality *and* speed *and* cost together.
+- **Contamination** — benchmark answers can leak into training data, so a high
+  MMLU may be memorization. Trust your own held-out task eval over leaderboards.
+- **Quantization quality** — measure it; don't assume Q4 ≈ fp16 for your task.
+- **No single number** — report quality together with speed and cost.
 
-**→ [Lab 3: Evaluation](labs/03-eval/)** — `lm-eval-harness` on a small benchmark
-plus a custom held-out task, comparing base vs fine-tuned vs quantized.
-
----
-
-## Phase 5 · Fine-tuning — teaching new behavior
-
-When a base model has the raw ability but not the **tone, format, or task
-behavior** you need. Cheaper than training; the workhorse of "build" today.
-
-### Full vs parameter-efficient (PEFT)
-
-Full fine-tuning updates *all* weights — for a 7B model in fp16 that needs the
-weights + gradients + optimizer states ≈ **tens of GB beyond the model**, far past
-a single 5090 for anything but tiny models.
-
-**LoRA** freezes the base model and trains tiny low-rank "adapter" matrices
-(often <1% of params). **QLoRA** goes further: load the base model in **4-bit**,
-train the LoRA adapter on top.
-
-| Method | What trains | VRAM (7B) | When |
-|--------|-------------|----------:|------|
-| **Full FT** | all weights | 🔴 huge | rarely; small models / big clusters |
-| **LoRA** | small adapters, base in fp16/bf16 | ~18–24 GB | the default |
-| **QLoRA** | small adapters, base in 4-bit | ~8–12 GB | when VRAM is tight / bigger base |
-
-> This is *the* reason a $2k GPU can fine-tune a useful model in 2026: you're not
-> moving 7B weights, you're learning a few million adapter numbers. After
-> training you can **merge** the adapter back into the weights, or keep it
-> separate and hot-swap adapters per task.
-
-**→ [Lab 2: Fine-tune LoRA/QLoRA + MLflow](labs/02-finetune/)** — turn
-Qwen2.5-3B-Instruct into a task-specialist with TRL/PEFT, track the run in MLflow,
-and compare before/after.
+**→ [Lab 3: Evaluation](labs/cloud-kaggle/lab3_eval_kaggle.ipynb)** — `lm-eval-harness`
+on a small benchmark plus a held-out task eval, comparing base vs fine-tuned.
 
 ---
 
-## Phase 6 · Training — rarely, and why
+## Phase 6 · Training
 
-Pre-training a foundation model from scratch means **trillions of tokens** and a
-**cluster** (recall [Layer 1](../01-infrastructure/) — the BasePOD exists for
-exactly this). Cost: millions of dollars and months.
+Pre-training a foundation model from scratch means trillions of tokens and a
+cluster (recall [Layer 1](../01-infrastructure/) — the BasePOD exists for exactly
+this), at a cost of millions of dollars and months of time.
 
-When it's *actually* justified:
+It is justified only when:
+
 - No existing model and no fine-tune can reach the goal.
-- A genuinely novel domain/modality or language with no coverage.
-- **Continued pre-training** (a softer middle ground): take an open base and keep
-  pre-training on a big domain corpus — far cheaper than from zero.
+- The domain, modality, or language genuinely has no coverage.
+- **Continued pre-training** is a middle ground: take an open base and keep
+  pre-training on a large domain corpus — far cheaper than starting from zero.
 
-> In class we **explain** training but **don't run it** — a single 5090 can't, and
-> that's the point. The decision tree is almost always: *use → fine-tune → (only
-> then) train.*
-
----
-
-## Phase 7 · MLOps — the glue
-
-The DevOps of this layer: makes everything above **reproducible, versioned, and
-observable**.
-
-| Concern | Tool examples | What it buys you |
-|---------|---------------|------------------|
-| **Experiment tracking** | MLflow, Weights & Biases | every run's params, metrics, loss curves |
-| **Model & dataset versioning** | MLflow Registry, HF Hub, DVC | "which weights are in prod?" answerable |
-| **CI/CD for models** | eval gates in the pipeline | don't ship a regression |
-| **Monitoring & drift** | latency, quality, input drift | catch silent decay in prod |
-
-> Without MLOps, a fine-tune is a mystery `.bin` on someone's laptop. With it, the
-> run is logged, the metrics are comparable, and the winning model is tagged and
-> deployable. We wire **MLflow** into the fine-tune lab so tracking isn't a
-> separate chore — it's how we *do* the experiment.
+We explain training but don't run it — a free Kaggle GPU can't, and that is the
+point. The decision path is almost always *use → fine-tune → (only then) train.*
 
 ---
 
-## When to build vs buy — the decision in one place
+## Phase 7 · MLOps
 
-- **Use as-is** — a catalog model already fits. Fastest, cheapest. *Start here.*
-- **RAG** ([`03-data/`](../03-data/)) — you need fresh/private **knowledge**.
-- **Fine-tune** — you need specific **behavior/format/skill** the base lacks.
-- **Train** — no model + no fine-tune will do. Rare and expensive.
+MLOps is the glue that wraps the whole loop. Its job is to give every step a
+**versioned input and output** so the pipeline is reproducible, and to **gate**
+the bad outputs before they ship.
 
-> Note: if your goal is to give the model *more knowledge* (e.g. recent
-> documents), prefer **RAG** over fine-tuning — cheaper and easier to keep fresh.
-> Fine-tune for *behavior*, RAG for *knowledge*.
+| Step | In → Out | What MLOps does |
+|------|----------|-----------------|
+| **Register** | requirement → model id + licence | catalog & version it |
+| **Fine-tune** | base + dataset → adapter + loss/metrics | track the run (params, curves); version the adapter + data |
+| **Evaluate** | model + held-out set → metric scores | **gate: a regression blocks the deploy** |
+| **Serve** | approved model → live endpoint | monitor latency, quality, drift |
+
+The tooling underneath: experiment tracking (MLflow, W&B), model/dataset
+versioning (MLflow Registry, HF Hub, DVC), eval gates in CI, and drift monitoring.
+Without it a fine-tune is an unlabelled file on a laptop; with it the run is
+logged, comparable, and the winning model is tagged and deployable — which is why
+Lab 2 wires in MLflow from the start. The eval gate is the same idea as the DevOps
+lecture's "checkov blocks `terraform apply`": a failing eval blocks the model
+deploy.
 
 ---
 
-## Labs (run on the RTX 5090)
+## When to build vs buy
+
+- **Use as-is** — a catalog model already fits. Fastest and cheapest; start here.
+- **RAG** ([`03-data/`](../03-data/)) — you need fresh or private knowledge.
+- **Fine-tune** — you need behaviour, format, or a skill the base lacks.
+- **Train** — no model and no fine-tune will do. Rare and expensive.
+
+In short: RAG for knowledge, fine-tune for behaviour, train almost never.
+
+---
+
+## Labs (run on a free Kaggle GPU)
+
+Interactive Kaggle notebooks, so any student can reproduce them with no hardware
+of their own. We use the **T4 (16 GB)** accelerator. Setup and chaining are in
+[`labs/README.md`](labs/README.md) and [`labs/cloud-kaggle/`](labs/cloud-kaggle/).
 
 | Lab | Phase | What you'll do | Time |
 |-----|-------|----------------|------|
-| **[0 · Bootstrap](labs/README.md)** | env | uv + Python 3.11 + torch (cu128 for Blackwell); GPU sanity | ~10 min |
-| **[1 · Serving](labs/01-serving/)** | serving + quant | Qwen2.5-3B fp16 vs Q4 on Ollama; tokens/s & VRAM | ~45 min |
-| **[2 · Fine-tune](labs/02-finetune/)** | fine-tune + mlops | LoRA/QLoRA on Qwen2.5-3B; MLflow tracking; before/after | ~60 min |
-| **[3 · Eval](labs/03-eval/)** | evaluation | lm-eval + held-out task; base vs tuned vs quantized | ~45 min |
+| **[1 · Serving](labs/cloud-kaggle/lab1_serving_kaggle.ipynb)** | serving + quant | Qwen2.5-3B fp16 vs Q4 on Ollama; tokens/s & VRAM | ~45 min |
+| **[2 · Fine-tune](labs/cloud-kaggle/lab2_finetune_kaggle.ipynb)** | fine-tune + mlops | QLoRA on Qwen2.5-3B; MLflow tracking; before/after | ~60 min |
+| **[3 · Eval](labs/cloud-kaggle/lab3_eval_kaggle.ipynb)** | evaluation | lm-eval + held-out task; base vs tuned | ~45 min |
 
-> All labs assume the bootstrap in [`labs/README.md`](labs/README.md). The 5090 is
-> Blackwell (sm_120) — torch must be a **cu128** build, or you'll hit
-> "no kernel image available for execution on the device."
+Kaggle's free GPU has no bf16, so the labs use fp16 (and
+`bnb_4bit_compute_dtype=float16`); with 16 GB of VRAM the fine-tune uses QLoRA.
+The account must be phone-verified to enable GPU and Internet.
 
 ---
 
-## Aside · the other end of the axis — superintelligence
+## Aside · the other end of the axis: superintelligence
 
-Everything above is about *narrow, specialized* intelligence — a 3B that beats a
-70B on one task. Nick Bostrom's **_Superintelligence: Paths, Dangers, Strategies_**
-(2014) asks the opposite question: what if one system exceeds human ability across
-*virtually every* domain?
+Everything above is about narrow, specialized intelligence — a 3B that beats a 70B
+on one task. Nick Bostrom's *Superintelligence: Paths, Dangers, Strategies* (2014)
+asks the opposite question: what if one system exceeds human ability across
+virtually every domain?
 
-- **Paths & forms** — most plausibly via better AI (vs. brain emulation or
-  cognitive enhancement), and "super" in *speed*, *collective* scale, or *quality*
-  of thinking.
-- **Takeoff** — recursive self-improvement could compound into an *intelligence
-  explosion*; whether that's slow or fast is debated.
-- **The two ideas worth knowing** (the book's core):
-  - **Orthogonality thesis** — intelligence and goals are independent. *Smarter
-    ≠ nicer*; any capability can pair with any objective.
+- **Paths & forms** — most plausibly via better AI (rather than brain emulation or
+  cognitive enhancement), and "super" in speed, collective scale, or quality of
+  thinking.
+- **Takeoff** — recursive self-improvement could compound into an intelligence
+  explosion; whether that is slow or fast is debated.
+- **Two core ideas:**
+  - **Orthogonality** — intelligence and goals are independent; a more capable
+    system is not automatically a nicer one.
   - **Instrumental convergence** — almost any final goal implies sub-goals like
-    self-preservation and resource acquisition. Hence the **paperclip
-    maximizer**: a system told to make paperclips, taken to the limit, consumes
-    everything to do it — not evil, just *superbly competent at the wrong
-    objective*.
-- **The control / alignment problem** — loading human values into something
-  smarter than us is hard, and "just switch it off" fails against a system that
-  anticipates you (the **treacherous turn**).
+    self-preservation and resource acquisition. Hence the paperclip maximizer: a
+    system told to make paperclips, taken to the limit, consumes everything to do
+    it — not malice, but competence aimed at the wrong objective.
+- **Control / alignment** — loading human values into something smarter than us is
+  hard, and "just switch it off" fails against a system that anticipates you (the
+  treacherous turn).
 
 ### Controlling it — four forms of agency (Bostrom, Ch. 10)
 
-If we *did* build one, **what shape should it take?** Bostrom frames four
-configurations, from least to most autonomy — a system-design question, not just
-a philosophical one:
+If we did build one, what shape should it take? Bostrom frames four configurations,
+from least to most autonomy:
 
 | Form | How it works | Control upside | Core risk |
 |------|--------------|----------------|-----------|
-| **Oracle** | Answers questions only — outputs text, then waits. No actions of its own. | Easiest to **box / sandbox**; doesn't touch the world directly. | The *answer itself* can manipulate — hidden malicious code, or persuasion that talks its operators into freeing it. |
-| **Genie** | Executes one given command, then stops for the next. | Bounded, step-by-step; a human approves each task. | **Perverse instantiation** — does what you literally *said*, not what you *meant* ("be careful what you wish for"). |
-| **Sovereign** | Given an open-ended goal, runs autonomously 24/7 to achieve it. | Little — this is the **singleton**, full autonomy. | Maximal: if alignment (e.g. **CEV**, coherent extrapolated volition) isn't solved, there's effectively no off-switch. |
-| **Tool** | No goals of its own — software you drive, like a compass or a CAD app. | No volition, no self-preservation or resource drive. | Even a "mere tool" doing open-ended optimization can surface dangerous plans or act agentically — the tool/agent line blurs. |
+| **Oracle** | Answers questions only; no actions of its own. | Easiest to sandbox; doesn't touch the world. | The answer itself can manipulate — hidden code or persuasion to free it. |
+| **Genie** | Executes one command, then waits for the next. | Bounded; a human approves each task. | Does what you literally said, not what you meant. |
+| **Sovereign** | Pursues an open-ended goal autonomously. | Little — full autonomy (the singleton). | Maximal: if alignment isn't solved, there's no off-switch. |
+| **Tool** | No goals of its own — software you drive. | No volition or self-preservation drive. | Open-ended optimization can still behave agentically. |
 
-These four map straight onto how we ship LLMs *today*: a Q&A chatbot is
-**oracle**-shaped, a task-executing agent is a **genie**, an always-on autonomous
-agent edges toward **sovereign**, a plain function/tool call is **tool**-shaped.
-Bostrom's safety ordering (oracle/tool safer, sovereign riskiest) is a live design
-heuristic for the **orchestration layer** ([`04-orchestration/`](../04-orchestration/)):
-grant the *least* autonomy that does the job, and keep a human in the approval loop.
+These map onto how we ship LLMs today: a Q&A chatbot is oracle-shaped, a
+task-executing agent is a genie, an always-on autonomous agent edges toward
+sovereign, and a plain function/tool call is tool-shaped. Bostrom's ordering
+(oracle and tool safer, sovereign riskiest) is a useful heuristic for the
+orchestration layer ([`04-orchestration/`](../04-orchestration/)): grant the least
+autonomy that does the job, and keep a human in the approval loop.
 
-Hold this lightly. Today's models are powerful but *narrow* — nowhere near this,
-and the book predates the LLM era. Treat it as the **ethical horizon** that makes
-alignment, evaluation, and human-in-the-loop (the habits we practice in the labs)
-matter in miniature *now*. It's a lens, not a forecast — timelines and even the
-framing are genuinely contested.
+Hold this lightly. Today's models are powerful but narrow — nowhere near this, and
+the book predates the LLM era. Treat it as the ethical horizon that makes
+alignment, evaluation, and human-in-the-loop matter in miniature now. It is a
+lens, not a forecast, and the framing is contested.
 </content>
