@@ -1,7 +1,7 @@
 # Instructor runsheet — Models layer (half day, ~3.5 h)
 
-A minute-by-minute spine. Slides = the "Models — deep dive" section of
-[`../../slides.md`](../../slides.md). Commands assume you're on the node in
+A minute-by-minute spine. Slides = the standalone Models deck
+[`../slides.md`](../slides.md) → `02-models/slides.pptx`. Commands assume you're on the node in
 `~/aibase-models-lab/labs/<lab>` with the venv active.
 
 > **Pre-class (do before students arrive):** confirm the env is warm — see

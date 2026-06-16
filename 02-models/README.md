@@ -273,4 +273,56 @@ observable**.
 > All labs assume the bootstrap in [`labs/README.md`](labs/README.md). The 5090 is
 > Blackwell (sm_120) — torch must be a **cu128** build, or you'll hit
 > "no kernel image available for execution on the device."
+
+---
+
+## Aside · the other end of the axis — superintelligence
+
+Everything above is about *narrow, specialized* intelligence — a 3B that beats a
+70B on one task. Nick Bostrom's **_Superintelligence: Paths, Dangers, Strategies_**
+(2014) asks the opposite question: what if one system exceeds human ability across
+*virtually every* domain?
+
+- **Paths & forms** — most plausibly via better AI (vs. brain emulation or
+  cognitive enhancement), and "super" in *speed*, *collective* scale, or *quality*
+  of thinking.
+- **Takeoff** — recursive self-improvement could compound into an *intelligence
+  explosion*; whether that's slow or fast is debated.
+- **The two ideas worth knowing** (the book's core):
+  - **Orthogonality thesis** — intelligence and goals are independent. *Smarter
+    ≠ nicer*; any capability can pair with any objective.
+  - **Instrumental convergence** — almost any final goal implies sub-goals like
+    self-preservation and resource acquisition. Hence the **paperclip
+    maximizer**: a system told to make paperclips, taken to the limit, consumes
+    everything to do it — not evil, just *superbly competent at the wrong
+    objective*.
+- **The control / alignment problem** — loading human values into something
+  smarter than us is hard, and "just switch it off" fails against a system that
+  anticipates you (the **treacherous turn**).
+
+### Controlling it — four forms of agency (Bostrom, Ch. 10)
+
+If we *did* build one, **what shape should it take?** Bostrom frames four
+configurations, from least to most autonomy — a system-design question, not just
+a philosophical one:
+
+| Form | How it works | Control upside | Core risk |
+|------|--------------|----------------|-----------|
+| **Oracle** | Answers questions only — outputs text, then waits. No actions of its own. | Easiest to **box / sandbox**; doesn't touch the world directly. | The *answer itself* can manipulate — hidden malicious code, or persuasion that talks its operators into freeing it. |
+| **Genie** | Executes one given command, then stops for the next. | Bounded, step-by-step; a human approves each task. | **Perverse instantiation** — does what you literally *said*, not what you *meant* ("be careful what you wish for"). |
+| **Sovereign** | Given an open-ended goal, runs autonomously 24/7 to achieve it. | Little — this is the **singleton**, full autonomy. | Maximal: if alignment (e.g. **CEV**, coherent extrapolated volition) isn't solved, there's effectively no off-switch. |
+| **Tool** | No goals of its own — software you drive, like a compass or a CAD app. | No volition, no self-preservation or resource drive. | Even a "mere tool" doing open-ended optimization can surface dangerous plans or act agentically — the tool/agent line blurs. |
+
+These four map straight onto how we ship LLMs *today*: a Q&A chatbot is
+**oracle**-shaped, a task-executing agent is a **genie**, an always-on autonomous
+agent edges toward **sovereign**, a plain function/tool call is **tool**-shaped.
+Bostrom's safety ordering (oracle/tool safer, sovereign riskiest) is a live design
+heuristic for the **orchestration layer** ([`04-orchestration/`](../04-orchestration/)):
+grant the *least* autonomy that does the job, and keep a human in the approval loop.
+
+Hold this lightly. Today's models are powerful but *narrow* — nowhere near this,
+and the book predates the LLM era. Treat it as the **ethical horizon** that makes
+alignment, evaluation, and human-in-the-loop (the habits we practice in the labs)
+matter in miniature *now*. It's a lens, not a forecast — timelines and even the
+framing are genuinely contested.
 </content>
