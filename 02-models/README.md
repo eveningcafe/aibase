@@ -146,9 +146,9 @@ lot.
 > answer; *throughput* = total tokens/sec across everyone. vLLM trades a little
 > latency for big throughput via batching. Ollama optimizes the single-user feel.
 
-**→ [Lab 1: Serving + quantization](labs/01-serving/)** — run Qwen2.5-7B on
-Ollama (Q4) and vLLM (fp16), measure tokens/s and VRAM, and watch a 14B model
-*only* fit once quantized.
+**→ [Lab 1: Serving + quantization](labs/01-serving/)** — serve one model
+(Qwen2.5-3B) at **fp16 vs Q4** on Ollama; measure tokens/s and VRAM and see Q4 use
+~½ the memory at ~1.5× the speed.
 
 ---
 
@@ -266,7 +266,7 @@ observable**.
 | Lab | Phase | What you'll do | Time |
 |-----|-------|----------------|------|
 | **[0 · Bootstrap](labs/README.md)** | env | uv + Python 3.11 + torch (cu128 for Blackwell); GPU sanity | ~10 min |
-| **[1 · Serving](labs/01-serving/)** | serving + quant | Ollama Q4 vs vLLM fp16; tokens/s & VRAM; fit a 14B via Q4 | ~45 min |
+| **[1 · Serving](labs/01-serving/)** | serving + quant | Qwen2.5-3B fp16 vs Q4 on Ollama; tokens/s & VRAM | ~45 min |
 | **[2 · Fine-tune](labs/02-finetune/)** | fine-tune + mlops | LoRA/QLoRA on Qwen2.5-3B; MLflow tracking; before/after | ~60 min |
 | **[3 · Eval](labs/03-eval/)** | evaluation | lm-eval + held-out task; base vs tuned vs quantized | ~45 min |
 

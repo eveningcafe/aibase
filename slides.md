@@ -596,11 +596,13 @@ cost: KV cache grows with context × concurrency — weights aren't the whole st
 
 > **Latency** = one fast answer · **throughput** = total tokens/s for everyone.
 
-**Lab 1:** Qwen2.5-7B on both; measure tokens/s & VRAM; fit a 14B *only* via Q4.
+**Lab 1:** one model (Qwen2.5-3B) at **fp16 vs Q4** on Ollama — Q4 ≈ ½ VRAM,
+~1.5× speed. (vLLM optional, for the batching contrast.)
 
 <!--
-Go to terminal. ollama_demo.sh then vllm_serve.sh + bench.py. Show vLLM pulling
-ahead as concurrency rises. Show 14B Q4 fitting where 14B fp16 wouldn't.
+Go to terminal: download.sh (once) then serve_bench.sh. Validated on the 5090:
+Q4 3.8 GB / ~199 tok-s vs fp16 7.8 GB / ~137 tok-s — same model. vLLM is an
+optional add to show continuous batching pulling ahead at concurrency.
 -->
 
 ---

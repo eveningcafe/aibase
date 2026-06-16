@@ -14,6 +14,15 @@ datasets mlflow`). Run from `~/aibase-models-lab/labs/02-finetune`.
 
 ---
 
+## Step 0 · Download the base model (once, ahead of class)
+
+```bash
+bash download.sh        # caches Qwen/Qwen2.5-3B-Instruct (~6 GB) — the only network step
+```
+
+Same 3B model as Labs 1 and 3. Keep this separate so train/infer time isn't spent
+waiting on a download.
+
 ## Step 1 · Make the dataset
 
 ```bash

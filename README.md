@@ -43,7 +43,7 @@ mid-2026).
               ┌─┴──────────────────────┴─┐
               │   FOUNDATION MODELS      │  L2 · OpenAI ~$33B · Anthropic ~$45B*
             ┌─┴──────────────────────────┴─┐
-            │   INFRASTRUCTURE / CHIPS      │  L1 · Nvidia ~$75B/qtr → ~$300B run-rate
+            │   INFRASTRUCTURE / CHIPS     │  L1 · Nvidia ~$75B/qtr → ~$300B run-rate
             └──────────────────────────────┘
                     base = most $ captured today
 ```

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Lab 1B — vLLM serving Qwen2.5-7B-Instruct at fp16, OpenAI-compatible API on :8000.
-# Run inside the vLLM venv:  source ~/aibase-models-lab/.venv-vllm/bin/activate
+# Lab 1 — OPTIONAL: vLLM serving the SAME model (Qwen2.5-3B) at fp16, to contrast
+# Ollama's single-user serving with vLLM's continuous batching at concurrency.
+# Needs the vLLM venv:  source ~/aibase-models-lab/.venv-vllm/bin/activate
+# (skip if you didn't install vLLM — the Ollama path already teaches the point)
 set -euo pipefail
 
-MODEL="${MODEL:-Qwen/Qwen2.5-7B-Instruct}"
+MODEL="${MODEL:-Qwen/Qwen2.5-3B-Instruct}"
 
-# --gpu-memory-utilization 0.85 leaves room; --max-model-len caps KV cache size.
-# On a single 5090 (32 GB) fp16 7B (~15 GB) + KV cache fits with room to spare.
 exec vllm serve "$MODEL" \
   --dtype bfloat16 \
   --gpu-memory-utilization 0.85 \

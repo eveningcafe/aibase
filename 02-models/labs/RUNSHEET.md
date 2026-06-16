@@ -30,26 +30,24 @@ cd ~/aibase-models-lab && source .venv/bin/activate
 
 # torch sees the GPU?
 python -c "import torch;print(torch.__version__, torch.cuda.get_device_name(0))"
-# models cached?
-ollama list                       # expect qwen2.5:7b, qwen2.5:14b
+# ONE model, cached at two precisions + as HF weights?
+ollama list                       # expect qwen2.5:3b, qwen2.5:3b-instruct-fp16
 ls labs/02-finetune/data          # expect train.jsonl, test.jsonl
 ```
 
-If a model is missing: `ollama pull qwen2.5:7b qwen2.5:14b`. The HF model for
-Labs 2–3 (`Qwen/Qwen2.5-3B-Instruct`) downloads on first `train.py`/`infer_*`
-run — **pre-run `infer_compare.py` once** so class doesn't wait on it.
+Download phase (run once if anything's missing):
+`cd labs/01-serving && bash download.sh` (Ollama tags) and
+`cd labs/02-finetune && bash download.sh` (HF 3B for fine-tune/eval).
 
 ## Live demo order (copy-paste)
 
 ```bash
-# --- Lab 1 ---
+# --- Lab 1 (download already done) ---
 cd ~/aibase-models-lab/labs/01-serving
-bash ollama_demo.sh                                   # Q4 7B + 14B, VRAM snapshots
-# (new tmux pane) vLLM:
-source ~/aibase-models-lab/.venv-vllm/bin/activate && bash vllm_serve.sh
-# (another pane)
-python bench.py --base-url http://localhost:8000/v1  --model Qwen/Qwen2.5-7B-Instruct --concurrency 16
-python bench.py --base-url http://localhost:11434/v1 --model qwen2.5:7b               --concurrency 16
+bash serve_bench.sh                                   # 3B: Q4 vs fp16, tokens/s + VRAM
+# optional vLLM throughput contrast (same 3B):
+# source ~/aibase-models-lab/.venv-vllm/bin/activate && bash vllm_serve.sh
+# python bench.py --base-url http://localhost:8000/v1 --model Qwen/Qwen2.5-3B-Instruct --concurrency 16
 
 # --- Lab 2 ---
 cd ~/aibase-models-lab/labs/02-finetune && source ~/aibase-models-lab/.venv/bin/activate
@@ -69,7 +67,7 @@ bash run_lmeval.sh
 
 1. **Choosing:** you pick for a *task + budget + GPU*, never "the best model."
 2. **Serving:** VRAM governs everything; quantization is the lever; latency ≠ throughput.
-3. **Fine-tune:** you learn a tiny adapter, not 7B weights — that's why it's cheap.
+3. **Fine-tune:** you learn a tiny adapter, not 3B weights — that's why it's cheap.
 4. **Eval:** trust your *held-out task* number over any leaderboard.
 5. **MLOps:** the eval is the CI gate; the run is a tracked artifact, not a mystery file.
 

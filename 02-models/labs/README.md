@@ -64,19 +64,24 @@ uv pip install --python .venv/bin/python \
   mlflow lm-eval "huggingface_hub[cli]"
 ```
 
-**vLLM** (Lab 1) gets its **own** venv — it pins its own torch and we don't want
-it disturbing the training venv:
+**Ollama** (Lab 1) is a separate server binary:
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+**vLLM** (Lab 1, *optional*) gets its **own** venv — it pins its own torch and we
+don't want it disturbing the training venv. Skip unless you want the throughput
+contrast; the Ollama path already teaches serving + quantization:
 
 ```bash
 uv venv --python 3.11 .venv-vllm
 uv pip install --python .venv-vllm/bin/python vllm
 ```
 
-**Ollama** (Lab 1) is a separate server binary:
-
-```bash
-curl -fsSL https://ollama.com/install.sh | sh
-```
+> **One model across all labs: `Qwen2.5-3B-Instruct`** (Apache-2.0, ungated). Each
+> lab has a **download phase** (run once, ahead of class) kept separate from its
+> **run phase**, so class time isn't spent waiting on downloads.
 
 ---
 

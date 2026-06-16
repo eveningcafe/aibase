@@ -4,7 +4,8 @@
 standard benchmark and a held-out task eval — comparing base vs fine-tuned.
 
 Prereqs: Lab 2 done (you have `adapters/lora`); deps include `lm-eval`.
-Run from `~/aibase-models-lab/labs/03-eval`.
+Run from `~/aibase-models-lab/labs/03-eval`. **No download phase** — this reuses
+the same Qwen2.5-3B already cached in Lab 2 (and served in Lab 1).
 
 | Phase concept | What we prove |
 |---------------|---------------|

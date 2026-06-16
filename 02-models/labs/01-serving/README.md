@@ -1,85 +1,82 @@
 # Lab 1 · Serving + quantization
 
-**Goal:** serve the same model two ways, *measure* the difference, and watch
-quantization turn a "doesn't fit" model into a "fits" one.
+**One model — Qwen2.5-3B — served at two precisions.** Same weights, so the only
+variable is **fp16 vs Q4**: watch VRAM halve and tokens/s rise.
 
-Prereqs: Lab 0 bootstrap done; Ollama installed; `.venv-vllm` created
-(see [`../README.md`](../README.md)).
+Prereqs: Lab 0 bootstrap; Ollama installed (see [`../README.md`](../README.md)).
 
 | Phase concept | What we prove |
 |---------------|---------------|
-| Engines | Ollama (single-user simplicity) vs vLLM (throughput) |
-| Precision / VRAM | fp16 vs Q4 weights → the sizing table is real |
-| KV cache | concurrency eats VRAM, not just weights |
-| Latency vs throughput | one fast answer vs many tokens/sec total |
+| Precision / VRAM | Q4 ≈ ½ the VRAM of fp16 — *identical model* |
+| Throughput | Q4 is also *faster* (fewer bytes to move) |
+| Quality cost | Q4 isn't free — measured in Lab 3 |
+| Latency vs throughput | one fast answer vs total tokens/sec |
 
 ---
 
-## Part A · Ollama (Q4, the easy path)
+## Phase 1 · Download (once, ahead of class)
 
 ```bash
-bash ollama_demo.sh
+bash download.sh
 ```
 
-What it does: pulls `qwen2.5:7b` (ships **Q4_K_M**, ~4.7 GB), runs a prompt, and
-snapshots VRAM. Then it pulls **`qwen2.5:14b`** (Q4, ~9 GB) — a model whose *fp16*
-weights (~28 GB) would barely fit, but at Q4 sits comfortably. **This is the
-punchline of the quantization story.**
+Pulls the same model twice — `qwen2.5:3b` (Q4_K_M, ~1.9 GB) and
+`qwen2.5:3b-instruct-fp16` (~6.2 GB). This is the only network step; keep it
+separate so class time is spent *running*, not waiting.
 
-Talk track while it runs:
-- 7B Q4 uses ~5–6 GB → tons of headroom on 32 GB.
-- 14B Q4 uses ~10–11 GB → still fine. The same 14B at fp16 would leave almost no
-  room for KV cache.
-- Ollama is great for *one* user. Now contrast throughput with vLLM.
+## Phase 2 · Serve & benchmark
 
-## Part B · vLLM (fp16, the throughput path)
+```bash
+bash serve_bench.sh
+```
 
-In a `tmux` pane, start the server:
+Serves each precision in turn and runs `bench.py` (single-request latency,
+single-stream tokens/s, and aggregate throughput at concurrency 8), printing the
+VRAM used for each. `bench.py` does a **warmup** call first so the first timed
+request isn't a cold model-load.
+
+To benchmark by hand against either tag:
+
+```bash
+python3 bench.py --base-url http://localhost:11434/v1 --model qwen2.5:3b               --concurrency 8
+python3 bench.py --base-url http://localhost:11434/v1 --model qwen2.5:3b-instruct-fp16 --concurrency 8
+```
+
+---
+
+## Validated on the 5090 ✅
+
+| Qwen2.5-3B | VRAM used | tokens/s (1 req, warm) | tokens/s (aggregate, c8) |
+|------------|----------:|-----------------------:|-------------------------:|
+| **Q4_K_M** | **3.8 GB** | **~199** | **~268** |
+| **fp16**   | **7.8 GB** | **~137** | **~170** |
+
+Read it out loud: **Q4 ≈ half the VRAM and ~1.5× the speed** of fp16 — same model.
+That's the lever the whole VRAM sizing table (in [`../README.md`](../README.md))
+is built on. The first cold request took ~56 s just to load weights into VRAM —
+a good "what's happening?" beat (the warmup hides it from the measurement).
+
+---
+
+## Optional · vLLM throughput contrast
+
+Ollama is single-user oriented; its aggregate barely beats single-stream. **vLLM**
+adds continuous batching + PagedAttention, so aggregate throughput climbs steeply
+with concurrency. If you installed the vLLM venv:
 
 ```bash
 source ~/aibase-models-lab/.venv-vllm/bin/activate
-bash vllm_serve.sh            # serves Qwen2.5-7B-Instruct at :8000 (OpenAI API)
+bash vllm_serve.sh                                    # same 3B model, fp16, :8000
+# new pane:
+python3 bench.py --base-url http://localhost:8000/v1 --model Qwen/Qwen2.5-3B-Instruct --concurrency 16
 ```
 
-Wait for `Application startup complete`. In another pane, benchmark both engines
-with the **same** script:
-
-```bash
-source ~/aibase-models-lab/.venv/bin/activate   # bench.py is stdlib-only, any venv works
-
-# vLLM (fp16) — OpenAI-compatible on :8000
-python bench.py --base-url http://localhost:8000/v1 --model Qwen/Qwen2.5-7B-Instruct --concurrency 16
-
-# Ollama (Q4) — OpenAI-compatible on :11434
-python bench.py --base-url http://localhost:11434/v1 --model qwen2.5:7b --concurrency 16
-```
-
-`bench.py` reports **single-request latency**, **single-stream tokens/s**, and
-**aggregate throughput** at the given concurrency.
-
----
-
-## What to expect (fill in live)
-
-| Engine / precision | VRAM used | tokens/s (1 req, warm) | tokens/s (aggregate) | notes |
-|--------------------|----------:|-----------------------:|---------------------:|-------|
-| Ollama Qwen2.5-7B **Q4** | **6.9 GB** ✅ | **~143** ✅ | **~192** (conc. 8) ✅ | single-user friendly |
-| vLLM Qwen2.5-7B **fp16** | ~15 GB | _measure_ | _measure_ | batching wins at concurrency |
-
-> ✅ = validated on the 5090. Ollama's aggregate only edges past single-stream
-> (it's single-user oriented); vLLM's continuous batching should pull *far* ahead
-> at concurrency 16 — that's the contrast to show. `bench.py` does a **warmup**
-> first so the single-request number isn't a cold-start (the first cold call took
-> 56 s just to load weights into VRAM — a good "what's happening?" teaching beat).
-
-> Teaching point: vLLM's aggregate throughput should pull *well* ahead of Ollama
-> as concurrency rises — that's **continuous batching + PagedAttention**. Ollama
-> may feel snappier for a single prompt. Different tools, different jobs.
+Skip it if you didn't install vLLM — the Ollama fp16-vs-Q4 comparison already
+makes the quantization point.
 
 ## Cleanup
 
 ```bash
-# stop vLLM: Ctrl-C in its pane
-ollama stop qwen2.5:7b 2>/dev/null; ollama stop qwen2.5:14b 2>/dev/null
+ollama stop qwen2.5:3b 2>/dev/null; ollama stop qwen2.5:3b-instruct-fp16 2>/dev/null
 ```
 </content>
