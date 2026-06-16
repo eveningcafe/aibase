@@ -4,12 +4,6 @@ The model is one important piece of the puzzle — not the whole thing. Builders
 have huge choice (2M+ models in catalogs like Hugging Face). This layer covers
 both **using** models and **building** them.
 
-> **Teaching layer.** This is the layer we go deep on in class. Read this file
-> top-to-bottom as the lecture notes; the **[`labs/`](labs/)** directory has the
-> hands-on demos we run live on the RTX 5090 lab node. The slide version of this
-> material lives in the repo's [`slides.md`](../slides.md) (Models deep-dive
-> section).
-
 ---
 
 ## The mental model: the lifecycle
@@ -19,12 +13,12 @@ evaluate → (optionally) adapt → operate**. Everything below is a phase of th
 loop.
 
 ```
-            ┌──────────────────────── MLOps (glue: track, version, monitor) ────────────────────────┐
-            │                                                                                         │
-  CHOOSE ──▶ REGISTRY ──▶ SERVING ──▶ EVALUATION ──┐                                                  │
+            ┌──────────────────────── MLOps (glue: track, version, monitor) ───────────────────────────┐
+            │                                                                                          │
+  CHOOSE ──▶ REGISTRY ──▶ SERVING ──▶ EVALUATION ──┐                                                   │
    (open?     (what we    (run it,     (is it good   │  not good enough?                               │
     size?      have, ids,  fp16/Q4,     enough?)     ├──▶ FINE-TUNE (LoRA/QLoRA)  ──▶ back to SERVING ─┘
-    spec?)     licenses)   tokens/s)                 └──▶ TRAIN (rare) ───────────▶ back to SERVING
+    spec?)     licenses)   tokens/s)                 └──▶ TRAIN (rare) ─────────────▶ back to SERVING
 ```
 
 Two rules of thumb we keep coming back to:
