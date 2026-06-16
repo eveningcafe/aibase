@@ -23,9 +23,6 @@ style: |
 
 ### From infrastructure to application
 
-A map of how AI systems are built — and where the money, the work,
-and the value actually are.
-
 <!--
 Open: a model is just one piece. Today we map the whole stack, then look at the
 money and what it means for DevOps. Figures are as of mid-2026; the CEO-math

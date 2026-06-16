@@ -3,7 +3,6 @@ marp: true
 theme: default
 paginate: true
 size: 16:9
-header: 'Models · Layer 2 — choose · serve · evaluate · fine-tune'
 style: |
   section { font-size: 26px; }
   h1 { font-size: 44px; }
@@ -21,10 +20,6 @@ style: |
 
 # Models — deep dive
 
-### Layer 2, hands-on (lab day)
-
-Choose → serve → evaluate → fine-tune → operate, on one RTX 5090.
-
 <!--
 This is the half-day deep dive on the Models layer. Same lab box throughout:
 RTX 5090, 32 GB. Everything here maps to 02-models/README.md and the labs/.
@@ -39,7 +34,7 @@ A model isn't a file you download once — it's a loop:
 
 ```
 CHOOSE → REGISTRY → SERVING → EVALUATION ─┐ not good enough?
-                                          ├─▶ FINE-TUNE ─┐
+                                          ├─▶ FINE-TUNE ──┐
                                           └─▶ TRAIN (rare)│
         └──────── MLOps: track · version · monitor ───────┘ back to serving
 ```
