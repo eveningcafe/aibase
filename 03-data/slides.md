@@ -288,23 +288,27 @@ every query; prompt caching helps only for static data. Don't sell either as dea
 
 ---
 
-## Labs — build it, then measure it
+## Lab — RAG retrieval, made visible
 
-Same free **Kaggle T4 (16 GB)** and **Qwen2.5-3B** as the Models labs — the layers
-chain.
+One focused notebook (~35 min) on a free **Kaggle T4** with **Qwen2.5-3B**, over a
+**real public k8s Q&A dataset** ([`kubernetes_qa_pairs`](https://huggingface.co/datasets/ItshMoh/kubernetes_qa_pairs)).
 
-| Lab | What you'll do |
-|-----|----------------|
-| **1 · Build RAG** | chunk a **k8s/SRE runbook** corpus → embed (`bge-small`) → FAISS → retrieve → answer; same ops question **hallucinated vs grounded** |
-| **1b · Real data** | same pipeline on **30k real Stack Overflow k8s Q&A** — clean HTML, HNSW, retrieval at scale *(bonus)* |
-| **2 · Eval RAG** | faithfulness / answer-relevance / context-recall; sweep chunk-size · top-k · reranker |
+The heart of RAG is **retrieval** — so we make it visible:
 
-fp16, Internet **On** for the first cell (deps + embedder + LLM).
+- **print the exact chunks** a question loads into the prompt
+- **top-k** — how many chunks to load (watch it grow + drift)
+- **chunk size** — small = precise vs large = more context
+- **reranker** — a cross-encoder reorders candidates (see the right chunk jump to #1)
+- then feed the top chunks to Qwen → **grounded, cited** answer + a *"I don't know"* refusal
+
+Pick **T4**, Internet **On** for the first cell.
 
 <!--
-Lab 1 payoff: the ungrounded answer is confidently wrong; add retrieval and it's
-correct + cited. Lab 1b shows the toy contrast fades on real data, but cleaning +
-retrieval-at-scale get real. Lab 2: numbers behind the knobs we just discussed.
+Star is retrieval: cell 3 prints the loaded chunks, so students can debug RAG.
+Reranker demo lands: vector grabs the wrong "images" chunk, reranker promotes the
+real garbage-collection answer. Public data the model often already knows, so the
+lesson here is retrieval quality + citations, not blocking hallucination. One lab
+fits a 120-min session: ~60-75 min lecture + ~35 min hands-on.
 -->
 
 ---

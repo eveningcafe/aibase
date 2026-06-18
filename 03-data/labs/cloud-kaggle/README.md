@@ -1,16 +1,15 @@
-# Data labs on Kaggle (free T4 GPU)
+# Data lab on Kaggle (free T4 GPU)
 
-The Data layer labs, as interactive **Kaggle notebooks** — free, browser-based,
+The Data layer lab, as one interactive **Kaggle notebook** — free, browser-based,
 and reproducible by any student. We use the **T4 (16 GB)** accelerator and the same
 **Qwen2.5-3B-Instruct** as the Models labs.
 
 | Notebook | Lab |
 |----------|-----|
-| [`lab1_rag_kaggle.ipynb`](lab1_rag_kaggle.ipynb) | Build a RAG pipeline over synthetic SRE runbooks (chunk → embed → FAISS → retrieve → generate) |
-| [`lab1b_realdata_kaggle.ipynb`](lab1b_realdata_kaggle.ipynb) | **Bonus:** the same pipeline on 30k real Stack Overflow k8s Q&A (HTML cleaning, HNSW, retrieval at scale) |
-| [`lab2_rageval_kaggle.ipynb`](lab2_rageval_kaggle.ipynb) | Evaluate RAG (faithfulness + retrieval metrics; sweep the knobs) |
+| [`lab_rag_kaggle.ipynb`](lab_rag_kaggle.ipynb) | **RAG retrieval, made visible** over a real public k8s Q&A dataset: print the chunks a query loads, top-k, chunk size, a cross-encoder reranker, then a grounded + cited Qwen answer and a refusal |
 
-One LLM throughout: **Qwen2.5-3B-Instruct**. Embedder: **`bge-small-en-v1.5`**.
+Data: **`ItshMoh/kubernetes_qa_pairs`** (HF Hub). LLM: **Qwen2.5-3B-Instruct** (T4).
+Embedder **`bge-small-en-v1.5`** + reranker **`bge-reranker-base`** (both on CPU).
 Vector store: **FAISS**.
 
 ## One-time setup (~5 min)
@@ -18,40 +17,24 @@ Vector store: **FAISS**.
 1. **Create a Kaggle account** → https://www.kaggle.com.
 2. **Phone-verify** (Settings → Phone). *Required* — without it, kernels can't use
    GPU or Internet, so pip-install and model download fail.
-3. In each notebook: **Settings → Accelerator = GPU (T4)**, **Internet = On**.
+3. In the notebook: **Settings → Accelerator = GPU T4 x2** (not P100),
+   **Internet = On**.
 
-## Running the labs
+## Running it
 
-Upload each `.ipynb` to Kaggle (or import from this repo) and **Run All**.
-
-1. **Lab 1 — build RAG.** Installs deps, builds a small **Kubernetes/SRE runbook**
-   corpus (runbooks, cluster policy, on-call rules, a postmortem), chunks + embeds
-   it, indexes in FAISS, and answers ops questions with Qwen2.5-3B. Shows the same
-   question **without** retrieval (hallucinated) vs **with** retrieval (grounded +
-   cited). Writes `index.faiss`, `chunks.jsonl`, and `qa.jsonl` to
-   `/kaggle/working`. **Save Version** so the output is reusable.
-2. **Lab 2 — eval.** **Add Input → Notebook Output → pick your Lab 1 version**, so
-   its index + chunks + Q&A set mount under `/kaggle/input/`. Then it scores
-   retrieval (recall@k, MRR) and generation (faithfulness, answer relevance) and
-   sweeps chunk-size / top-k / reranker. If no Lab 1 input is attached, the first
-   cell rebuilds the corpus inline so the lab is self-contained.
-
-## What the T4 changes
-
-- **16 GB VRAM** → the 3B LLM (fp16) + the small embedder fit easily; the FAISS
-  index lives in RAM, not VRAM.
-- **No bf16** → load the LLM in **fp16**.
-- RAG's cost is **retrieval quality and tokens**, not GPU horsepower — most of each
-  lab runs CPU-side.
+Upload `lab_rag_kaggle.ipynb` to Kaggle (or import from this repo) and **Run All**.
+It is fully self-contained: pulls the dataset, embeds + indexes the answers, then
+walks retrieval (which chunks load, top-k, chunk size, reranker) and finishes with
+a grounded + cited Qwen answer and a refusal. ~35 minutes, most of it the one-time
+model download.
 
 ## Notes / gotchas
 
-- **Quota:** ~30 GPU-h/week, ≤12 h/session. Each lab is minutes.
-- **Embed once:** building embeddings is the slow step; we cache them to disk so
-  re-runs are fast. Change the embedding model → delete the cache and re-embed.
-- **Same embedder for docs and queries** — the labs enforce this; it's the most
-  common RAG bug.
-- **Ephemeral sessions:** outputs vanish unless you Save Version or chain them as
-  an input (that's how Lab 2 gets Lab 1's index).
-- **LLM-as-judge:** Lab 2's faithfulness score uses Qwen itself as a small judge —
-  cheap and offline, but treat it as indicative, not ground truth.
+- **Pick T4, not P100** — the preinstalled PyTorch doesn't support Kaggle's older
+  P100 (CUDA `sm_60`); on a P100 the LLM cell errors with `no kernel image`. Set
+  **Accelerator = GPU T4 x2** before running.
+- **Embedder + reranker on CPU** — both are tiny; running them on CPU is instant
+  for this corpus. Only the LLM uses the GPU.
+- **No bf16 on T4** → the LLM loads in **fp16**.
+- **Quota:** ~30 GPU-h/week, ≤12 h/session. The lab is minutes.
+- **First run slow:** installs deps + downloads the model; re-runs reuse the cache.

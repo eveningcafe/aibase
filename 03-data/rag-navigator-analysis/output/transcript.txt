@@ -1,0 +1,83 @@
+[00:00] We've all had this experience.
+[00:02] You search for something, you get thousands of results, and somehow, none of them are what you wanted.
+[00:08] Well, what if I told you search engines don't actually understand your questions?
+[00:12] At least, they didn't used to.
+[00:14] From simple keyword search to present-day agentic RAG,
+[00:18] information retrieval has seen an evolution, and search engines didn't get smarter overnight; they grew up one step at a time.
+[00:26] Let's start from the beginning.
+[00:28] The earliest search systems were designed around the question of "Where does this word appear?"
+[00:33] Documents were indexed using what's called inverted indices, aka a mapping of keywords to documents.
+[00:43] When a user asks a question, the search system will look up these words and quickly return the matching documents.
+[00:58] These documents may then be ranked using TF-IDF or BM25 to measure how important or frequent different terms were.
+[01:06] This powerful keyword matching approach still powers a lot of the internet today, but there's a fundamental limitation: it doesn't understand language.
+[01:16] It treats words as symbols, not meaning.
+[01:20] Synonyms, ambiguity and any complex intents were essentially invisible.
+[01:24] For example, is the search help Python?
+[01:28] Related to coding, or did I just get a pet snake?
+[01:31] It was on the user to be asking the right questions with the exact right words.
+[01:37] The next major leap was semantic search.
+[01:40] Instead of treating text as words, we began representing them as language.
+[01:45] This is done using vectors or high dimensional number representations that can understand meaning.
+[01:53] For example, coffee might be represented as 0 1 0 versus house might be represented as 1 0 0.
+[02:09] These embeddings don't just come out of nowhere.
+[02:11] They are learned by large neural networks trained on massive text corpora.
+[02:16] By encountering words in context, over time these similar concepts will end up close together even if they use different words.
+[02:25] If this is coffee, maybe espresso is represented here. Very close in concept to coffee, but not anywhere close to house.
+[02:35] Semantic search turns your words into a kind of map.
+[02:38] So the system knows espresso and coffee are pointing to a very similar place.
+[02:43] It's essentially your friend who knows what you mean, even if you don't say it perfectly every time.
+[02:49] This allowed search systems to understand intent.
+[02:52] Even if the exact keywords were not used, you could still find relevant documents.
+[02:59] And this didn't replace keyword search; it actually complemented it.
+[03:04] Hybrid systems began to emerge, bridging the precision of keyword search with semantic recall.
+[03:10] For the first time, instead of just matching text, search was able to approximate understanding.
+[03:17] Then, the world shifted.
+[03:19] Large language models were born.
+[03:23] These are models trained on a large corpora of text to learn patterns in the data.
+[03:31] LLMs don't retrieve facts.
+[03:34] When prompted, they will predict the most likely next token or words for an answer based on those patterns that they learned from the training data.
+[03:44] The user asks a question to the LLM and it will return a text answer.
+[03:53] These are super powerful and revolutionize the business world.
+[03:58] However, they had a problem.
+[04:00] LLMs only use specific knowledge they learned during a long and expensive training process.
+[04:07] Realistically, that means any knowledge is locked to only the documents that that specific LLM was trained on before a certain point in time.
+[04:20] LLMs don't know today's information, and certainly don't know your specific documents.
+[04:26] So what's the solution?
+[04:27] Well, it's actually search.
+[04:30] Retrieval augmented generation, or RAG, was born.
+[04:34] The idea is very simple.
+[04:36] The user asks a question, the system does a search for relevant documents using an external knowledge base.
+[04:47] This retrieval is used to augment the LLM's prompt and a final answer is generated.
+[05:02] This gave LLMs a form of external memory.
+[05:06] Now they could cite sources, adapt to new information and even operate in specialized domains without the costly retraining.
+[05:15] These original RAG pipelines were very linear.
+[05:18] Documents were embedded offline into these vector databases.
+[05:26] They were retrieved once at query time and passed straight into the model.
+[05:30] It was simple, but effective.
+[05:32] This massive improvement significantly dropped hallucinations and enabled LLM adoption across a multitude of new domains.
+[05:41] But traditional RAG is nowhere near perfect.
+[05:44] It cannot adapt to new scenarios.
+[05:47] And suddenly we are back at the problem of traditional search.
+[05:51] The answer is only as good as the search itself.
+[05:55] Within such a short period, countless advancements were made to RAG, developing the simple concept into a sophisticated power to be reckoned with.
+[06:04] Instead of a single retrieval step, pipelines added rerankers to reorder results to be more relevant.
+[06:13] User queries were rewritten or expanded upon to improve recall.
+[06:18] Similar to before, hybrid retrieval became the norm, leveraging the precision of keyword search with semantic vector search.
+[06:29] These systems were far more accurate, but still fundamentally static.
+[06:34] The pipeline was predetermined and retrieval was smarter, but still not intelligent.
+[06:41] Enter the next disruptor: agents.
+[06:45] Agents are systems that use LLMs and tools to perform tasks autonomously.
+[06:51] Suddenly we shifted from simple pipelines to complex decision-making systems.
+[06:57] Agents have a variety of tools such as LLMs, memory, planning, critics, retrievers and many more.
+[07:15] Agents had become autonomous decision-makers, planning and executing complex tasks.
+[07:22] Now, instead of linear RAG retrieval, when the user asks a question,
+[07:27] an AI agent will decide whether retrieval is needed, where to search,
+[07:33] what questions should be asked, when enough information is obtained, and then generate a final answer.
+[07:42] Agents can compare sources, validate claims, refine queries and iterate.
+[07:48] It can invoke APIs, pull data from many knowledge bases and incorporate multimodal data.
+[07:55] Retrieval is no longer fixed; it's a tool invoked as part of reasoning.
+[08:02] This opens up a world of possibilities.
+[08:05] Now, agentic RAG systems are capable of multistep research, cross-document synthesis and general adaptive behavior.
+[08:14] The system doesn't just answer questions; it reasons and figures out how to answer them.
+[08:20] From simple search to current agentic RAG, we have learned time and time again that the next big step isn't better answers; it's systems that know how to find them.
+[08:31] And the hardest part of AI isn't generation; it's deciding what to look at.

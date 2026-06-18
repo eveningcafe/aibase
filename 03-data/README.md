@@ -278,20 +278,19 @@ but a *dynamic* corpus pays the full token tax on every request.
 
 ---
 
-## Labs (run on a free Kaggle GPU)
+## Lab (run on a free Kaggle GPU)
 
-Interactive Kaggle notebooks, so any student can reproduce them with no hardware
-of their own — the same **T4 (16 GB)** and **Qwen2.5-3B-Instruct** as the Models
-labs, so the layers chain. Setup is in [`labs/README.md`](labs/README.md).
+One focused, self-contained Kaggle notebook (~35 min), reproducible by any student
+on the same **T4 (16 GB)** and **Qwen2.5-3B-Instruct** as the Models labs, so the
+layers chain. Setup is in [`labs/README.md`](labs/README.md).
 
-| Lab | Phase | What you'll do | Time |
-|-----|-------|----------------|------|
-| **1 · Build RAG** | chunk → embed → retrieve → generate | chunk a small **Kubernetes/SRE runbook** corpus, embed with `bge-small`, index in FAISS, retrieve, and answer with Qwen2.5-3B — show the same ops question hallucinated vs grounded | ~50 min |
-| **1b · Real data** *(bonus)* | ingest → clean → HNSW at scale | run the same pipeline over **30k real Stack Overflow k8s Q&A** ([dataset](https://huggingface.co/datasets/mcipriano/stackoverflow-kubernetes-questions), CC-BY-SA-4.0): strip HTML, chunk, index with HNSW, and see retrieval get hard at scale | ~40 min |
-| **2 · Evaluate RAG** | retrieval + generation eval | score faithfulness, answer relevance, and context recall on a held-out set; sweep chunk-size / top-k / reranker and read the trade-off | ~45 min |
+| Lab | Covers | What you'll do | Time |
+|-----|--------|----------------|------|
+| **RAG retrieval, made visible** | see chunks → top-k → chunk size → reranker → generate | over a real public k8s Q&A dataset ([`kubernetes_qa_pairs`](https://huggingface.co/datasets/ItshMoh/kubernetes_qa_pairs)): **print the exact chunks** a query loads, watch **top-k** grow, compare **chunk sizes**, add a **cross-encoder reranker** (see it reorder), then feed the top chunks to Qwen2.5-3B for a **grounded, cited** answer (and a *"I don't know"* refusal) | ~35 min |
 
-Same constraints as the Models labs: free GPU, fp16, Internet **On** for the
-first cell (installs deps + pulls the embedding model and LLM).
+The lab centers on **retrieval** — the part that decides RAG quality. Constraints
+like the Models labs: free GPU (pick **T4**), fp16 LLM, embedder + reranker on CPU,
+Internet **On** for the first cell (installs deps + pulls the dataset, embedder, LLM).
 
 ---
 
