@@ -1,6 +1,7 @@
 # Lab · Data layer (free Kaggle GPU)
 
-Hands-on companion to [`../README.md`](../README.md). **One focused lab (~35 min)**,
+Hands-on companion to [`../README.md`](../README.md). **Two labs (~25 min each)** that
+mirror the README's chapters — **Lab 1 = simple pipeline, Lab 2 = advanced pipeline** —
 runnable on a **free Kaggle notebook GPU** — the same **T4 (16 GB)** and the same
 **Qwen2.5-3B-Instruct** as the [Models labs](../../02-models/labs/), so the layers
 chain: the model you served and tuned in Layer 2 now gets *grounded* in Layer 3.
@@ -8,14 +9,16 @@ The corpus is a **real public Kubernetes Q&A dataset**
 ([`kubernetes_qa_pairs`](https://huggingface.co/datasets/ItshMoh/kubernetes_qa_pairs),
 ~500 tagged Q&A pairs), keeping the demo on the repo's DevOps theme.
 
-| Lab | Topic | Notebook |
-|-----|-------|----------|
-| RAG | **RAG retrieval, made visible** | [`cloud-kaggle/lab_rag_kaggle.ipynb`](cloud-kaggle/lab_rag_kaggle.ipynb) |
+| Lab | Chapter | Topic | Notebook |
+|-----|---------|-------|----------|
+| 1 | Simple pipeline | **Simple RAG, made visible** | [`cloud-kaggle/lab1_simple_rag_kaggle.ipynb`](cloud-kaggle/lab1_simple_rag_kaggle.ipynb) |
+| 2 | Advanced pipeline | **Reranking & evaluation** | [`cloud-kaggle/lab2_advanced_rag_kaggle.ipynb`](cloud-kaggle/lab2_advanced_rag_kaggle.ipynb) |
 
-It centers on **retrieval** — the part that decides RAG quality: **print the exact
-chunks** a query loads, vary **top-k**, compare **chunk sizes**, add a
-**cross-encoder reranker** (watch it reorder), then feed the top chunks to
-Qwen2.5-3B for a **grounded, cited** answer plus a *"I don't know"* refusal.
+**Lab 1** builds naive RAG end-to-end and makes **retrieval** visible — **print the
+exact chunks** a query loads, vary **top-k**, compare **chunk sizes** — then feeds the
+top chunks to Qwen2.5-3B for a **grounded, cited** answer plus a *"I don't know"*
+refusal. **Lab 2** adds a **cross-encoder reranker** (watch it reorder) and then
+**measures** the lift — **recall@3** and **MRR**, vector-only vs reranked.
 Setup and gotchas are in [`cloud-kaggle/README.md`](cloud-kaggle/README.md).
 
 ---

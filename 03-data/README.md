@@ -10,30 +10,57 @@ The line from the Models layer holds: **RAG for knowledge, fine-tune for
 behaviour** ([`02-models/`](../02-models/)). If the model has the skill but lacks
 the facts, you are in the right place.
 
-## The pipeline
+## How we got here · the evolution of retrieval
 
-Data flows one way at build time, and is queried in reverse at answer time:
+RAG didn't arrive fully formed. Search grew up one step at a time, and each step
+fixed the blind spot of the one before. Walking that short history is the fastest
+way to see *why* the pipeline below looks the way it does — every phase is an answer
+to a limitation an earlier era hit.
+
+**Era 1 · Keyword search.** The earliest engines answered one question: *where does
+this word appear?* Documents were indexed with **inverted indices** (a map of
+keyword → documents that contain it) and ranked with **TF-IDF** or **BM25** by how
+important or frequent each term was. This still powers much of the web — but it
+doesn't understand language. It matches *symbols*, not *meaning*, so synonyms and
+intent are invisible:
 
 ```
-BUILD (offline, batch)                          ANSWER (online, per query)
-  sources → clean → chunk → embed → vector store   query → embed → retrieve → rerank
-                                          │                                      │
-                                          └──────────────► vector store ◄────────┘
-                                                                                 │
-                                                          augment prompt → model → answer
+   query "my pod keeps restarting"   ✗   doc "fixing CrashLoopBackOff"
+   same problem, 0 shared words → keyword search never finds it
 ```
 
-The phases below follow this flow, and map onto the two hands-on
-[labs](#labs-run-on-a-free-kaggle-gpu): build a RAG pipeline (Lab 1), then
-measure it (Lab 2).
+The burden was on the user to guess the exact right words.
 
-Two rules of thumb run through everything:
+**Era 2 · Semantic search.** The leap: represent text as **meaning** instead of
+words. Each piece of text becomes a **vector** — a list of numbers — learned by a
+neural network trained on massive text. Having seen words in context, the model
+places similar concepts close together even when the words differ. *Espresso* lands
+right next to *coffee*, and nowhere near *house*:
 
-1. The model can only answer from what you **retrieve** — bad retrieval caps
-   quality no matter how good the model is. *Most RAG failures are retrieval
-   failures.*
-2. Garbage in, garbage out — the pipeline (clean + chunk) decides what
-   retrieval can even find.
+```
+        ▲ y
+        │   ● coffee     (0 1 0)
+        │  ● espresso              near coffee in meaning
+        │
+        │               ● house    (1 0 0)
+        └────────────────────────────▶ x
+   position = meaning · distance = (dis)similarity
+```
+
+## Chapter 1 · The simple pipeline
+
+Semantic search at scale *is* the RAG pipeline. The simplest version: embed docs
+offline; per query, embed it, fetch top-k, then prompt.
+
+```
+BUILD (offline, once)                     ANSWER (per query)
+  sources → clean → chunk → embed → ⛁     query → embed → retrieve top-k → prompt → model → answer
+                                    └────────────────► ⛁ ◄──────────┘
+```
+
+Useful, but naïve: similarity-only, fixed top-k, trusts the user's phrasing — the gaps
+Chapter 2 closes. Phases 1–6 below detail each piece; [Lab 1](#labs-run-on-a-free-kaggle-gpu)
+builds it end-to-end.
 
 ---
 
@@ -195,6 +222,36 @@ becomes a tool the agent calls in a loop, not a fixed pre-step.
 
 ---
 
+## Chapter 2 · The advanced pipeline
+
+Where most RAG quality lives — each addition fixes one of Chapter 1's gaps.
+
+**Better retrieval:**
+
+- **Data tagging** — metadata per chunk (source · ACL · date) → filter + permissions.
+- **Intent** — rewrite/expand the query (+ hybrid keyword) before retrieval.
+- **Reranker** — over-fetch, then rescore to the best few. Biggest lever after chunking.
+
+```
+BUILD                                  ANSWER
+  … → chunk → embed → ⛁                query → interpret intent (rewrite / + hybrid)
+       └ tag: source·ACL·date                 → retrieve top-30 ─filter by tag→ ⛁
+                                              → rerank → top-5 → prompt → model → answer
+```
+
+**Production** — wrap it in a data-ops loop: re-index (freshness), version, govern
+(ACL, delete), watch cost/latency, evaluate continuously. Phases 7–8 below cover it;
+[Lab 2](#labs-run-on-a-free-kaggle-gpu) adds the reranker and measures the lift.
+
+```
+        ┌──────── data-ops: freshness · version · govern · cost ────────┐
+        ▼                                                               │
+   [ BUILD ] → [ ⛁ ] → [ ANSWER ] → answer + citation                   │
+        └──────── evaluation (retrieval + faithfulness) ◄───────────────┘
+```
+
+---
+
 ## Phase 7 · Evaluation
 
 "The demo answered well" is not evidence — the same trap as the Models layer. RAG
@@ -278,19 +335,21 @@ but a *dynamic* corpus pays the full token tax on every request.
 
 ---
 
-## Lab (run on a free Kaggle GPU)
+## Labs (run on a free Kaggle GPU)
 
-One focused, self-contained Kaggle notebook (~35 min), reproducible by any student
-on the same **T4 (16 GB)** and **Qwen2.5-3B-Instruct** as the Models labs, so the
-layers chain. Setup is in [`labs/README.md`](labs/README.md).
+Two self-contained Kaggle notebooks (~25 min each), one per chapter, reproducible by
+any student on the same **T4 (16 GB)** and **Qwen2.5-3B-Instruct** as the Models labs,
+so the layers chain. Setup is in [`labs/README.md`](labs/README.md).
 
-| Lab | Covers | What you'll do | Time |
-|-----|--------|----------------|------|
-| **RAG retrieval, made visible** | see chunks → top-k → chunk size → reranker → generate | over a real public k8s Q&A dataset ([`kubernetes_qa_pairs`](https://huggingface.co/datasets/ItshMoh/kubernetes_qa_pairs)): **print the exact chunks** a query loads, watch **top-k** grow, compare **chunk sizes**, add a **cross-encoder reranker** (see it reorder), then feed the top chunks to Qwen2.5-3B for a **grounded, cited** answer (and a *"I don't know"* refusal) | ~35 min |
+| Lab | Chapter | What you'll do | Time |
+|-----|---------|----------------|------|
+| **1 · Simple RAG, made visible** | Chapter 1 | over a real public k8s Q&A dataset ([`kubernetes_qa_pairs`](https://huggingface.co/datasets/ItshMoh/kubernetes_qa_pairs)): **print the exact chunks** a query loads, watch **top-k** grow, compare **chunk sizes**, then feed the top chunks to Qwen2.5-3B for a **grounded, cited** answer (and a *"I don't know"* refusal) | ~25 min |
+| **2 · Reranking & evaluation** | Chapter 2 | add a **cross-encoder reranker** (see it reorder), then **measure** the lift — **recall@3** and **MRR**, vector-only vs reranked | ~25 min |
 
-The lab centers on **retrieval** — the part that decides RAG quality. Constraints
-like the Models labs: free GPU (pick **T4**), fp16 LLM, embedder + reranker on CPU,
-Internet **On** for the first cell (installs deps + pulls the dataset, embedder, LLM).
+Lab 1 centers on **retrieval** — the part that decides RAG quality; Lab 2 adds the
+reranker and proves it with numbers. Constraints like the Models labs: free GPU (pick
+**T4**), fp16 LLM, embedder + reranker on CPU, Internet **On** for the first cell
+(installs deps + pulls the dataset, embedder, LLM).
 
 ---
 

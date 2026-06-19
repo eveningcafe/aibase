@@ -1,12 +1,13 @@
-# Data lab on Kaggle (free T4 GPU)
+# Data labs on Kaggle (free T4 GPU)
 
-The Data layer lab, as one interactive **Kaggle notebook** — free, browser-based,
-and reproducible by any student. We use the **T4 (16 GB)** accelerator and the same
+The Data layer as two interactive **Kaggle notebooks** — free, browser-based, and
+reproducible by any student. We use the **T4 (16 GB)** accelerator and the same
 **Qwen2.5-3B-Instruct** as the Models labs.
 
 | Notebook | Lab |
 |----------|-----|
-| [`lab_rag_kaggle.ipynb`](lab_rag_kaggle.ipynb) | **RAG retrieval, made visible** over a real public k8s Q&A dataset: print the chunks a query loads, top-k, chunk size, a cross-encoder reranker, then a grounded + cited Qwen answer and a refusal |
+| [`lab1_simple_rag_kaggle.ipynb`](lab1_simple_rag_kaggle.ipynb) | **Simple RAG, made visible** (Chapter 1) over a real public k8s Q&A dataset: print the chunks a query loads, top-k, chunk size, then a grounded + cited Qwen answer and a refusal |
+| [`lab2_advanced_rag_kaggle.ipynb`](lab2_advanced_rag_kaggle.ipynb) | **Reranking & evaluation** (Chapter 2): add a cross-encoder reranker, then measure the lift — recall@3 and MRR, vector-only vs reranked |
 
 Data: **`ItshMoh/kubernetes_qa_pairs`** (HF Hub). LLM: **Qwen2.5-3B-Instruct** (T4).
 Embedder **`bge-small-en-v1.5`** + reranker **`bge-reranker-base`** (both on CPU).
@@ -22,10 +23,11 @@ Vector store: **FAISS**.
 
 ## Running it
 
-Upload `lab_rag_kaggle.ipynb` to Kaggle (or import from this repo) and **Run All**.
-It is fully self-contained: pulls the dataset, embeds + indexes the answers, then
-walks retrieval (which chunks load, top-k, chunk size, reranker) and finishes with
-a grounded + cited Qwen answer and a refusal. ~35 minutes, most of it the one-time
+Upload either notebook to Kaggle (or import from this repo) and **Run All** — each is
+fully self-contained. **Lab 1** pulls the dataset, embeds + indexes the answers, walks
+retrieval (which chunks load, top-k, chunk size), and finishes with a grounded + cited
+Qwen answer and a refusal. **Lab 2** rebuilds the index, adds a cross-encoder reranker,
+and evaluates retrieval (recall@3, MRR). ~25 minutes each, most of it the one-time
 model download.
 
 ## Notes / gotchas
