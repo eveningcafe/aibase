@@ -75,17 +75,12 @@ and the shape decides how much pipeline work you do before it is usable.
 | **Semi-structured** | Markdown, HTML, JSON, CSV, tables | Medium — structure-aware splitting |
 | **Structured** | SQL databases, APIs, spreadsheets | Low for the data; you often query it directly instead of embedding |
 
-Two cross-cutting concerns from day one:
+In reality data look messy:
 
-- **Freshness** — is this a one-time dump or a feed that changes? That decides
-  whether you re-index nightly, on write, or never (Phase 8).
-- **Permissions** — who is allowed to see each document? Access control must
-  survive into retrieval, or RAG becomes a data-leak engine. Carry an ACL /
-  tenant tag as metadata on every chunk.
-
-Not everything belongs in a vector store. Exact lookups (an order status, a
-price) belong in a SQL/API call the agent makes (Layer 4); RAG is for
-*fuzzy, semantic* recall over text.
+![messy table](assets/messy-data/messy-table_NIST-800-190-controls-mapping-p55.png)
+![incident-response flowchart](assets/messy-data/incident-response-flowchart_CISA-playbooks-p6-06.png)
+![data-pipeline architecture](assets/messy-data/data-pipeline-architecture_AWS-analytics-lens-p110.png)
+![k8s container architecture](assets/messy-data/k8s-container-vs-vm-architecture_NIST-800-190-p17.png)
 
 ---
 
@@ -101,7 +96,7 @@ surrounding meaning.
 
 | Strategy | How | When |
 |----------|-----|------|
-| **Fixed-size** | N tokens with an overlap (e.g. 512 / 64) | default, simple, robust |
+| **Fixed-size** | N tokens with an overlap (e.g. 512 / 256) | default, simple, robust |
 | **Recursive** | split on paragraphs → sentences → words until it fits | good for prose |
 | **Structure-aware** | split on Markdown headings, code blocks, table rows | docs/code with clear structure |
 | **Semantic** | split where the topic shifts (embedding-distance) | best quality, more compute |
@@ -121,13 +116,17 @@ customer's docs", "only since 2026") and cite the answer back to a source.
 
 ## Phase 3 · Embeddings
 
-An **embedding** is a vector (a list of numbers, e.g. 384–1536 of them) that
-encodes the *meaning* of a chunk. Texts with similar meaning land near each other,
-so "how do I reset my password" sits close to "forgot login credentials" even with
-no shared words. Retrieval is then just *find the nearest vectors*.
+An **embedding** turns text into a **vector** (a list of numbers, e.g. 384–1536)
+that encodes its *meaning* — similar meaning lands nearby, even with no shared words:
 
-An embedding model is its own, separate model from the LLM — usually small and
-cheap (runs on CPU or a tiny slice of GPU).
+```
+"how do I reset my password"   → [ 0.21, -0.07,  0.88, … ]
+"forgot my login credentials"  → [ 0.19, -0.05,  0.85, … ]   ← nearly same direction
+                cosine / dot(a, b) ≈ 0.97  →  near in meaning  →  retrieve
+```
+
+Retrieval is just *find the nearest vectors*. The embedder is its own small model,
+separate from the LLM (CPU or a sliver of GPU).
 
 | Choose on | Why it matters |
 |-----------|----------------|
@@ -171,23 +170,14 @@ permissions and freshness are enforced at retrieval, not after.
 
 ## Phase 5 · Retrieval
 
-Answer time. The query is embedded with the same model, the store returns the
-**top-k** nearest chunks, and those become the model's context.
+Answer time. The query is embedded with the **same model**, the store returns the
+**top-k** nearest chunks, and those — and only those — become the model's context.
 
 - **top-k** — how many chunks to fetch (often 3–10). Too few starves the model;
   too many adds noise and burns context budget.
-- **Similarity search alone misses keywords.** Dense (embedding) retrieval is
-  great at meaning but can miss exact terms — product codes, error numbers, rare
-  names. **Hybrid search** combines dense with classic keyword (**BM25**) and
-  fuses the rankings, recovering both.
-- **Reranking** — fetch a generous top-k (say 30) with the cheap vector search,
-  then a small **cross-encoder reranker** rescores query-vs-chunk pairs and keeps
-  the best 3–5. It is slower per pair but dramatically lifts precision, because it
-  reads the query and the chunk *together* instead of comparing pre-computed
-  vectors. This is the single biggest quality lever after chunking.
 
 ```
-query → [dense top-30] ∪ [BM25 top-30] → rerank → top-5 → prompt
+query → embed → vector top-k → prompt
 ```
 
 ---
@@ -206,49 +196,35 @@ USER: <the question>
 This is the **open-book exam** vs memorizing: the model looks things up at answer
 time instead of recalling from training. The payoffs are fresh + private knowledge
 without retraining, **citations** (answers grounded in named sources), and a cheap
-way to update knowledge — re-index, don't re-train.
-
-Beyond the basic loop:
-
-| Pattern | What it adds |
-|---------|--------------|
-| **Query rewriting** | clean up / expand the user's question before retrieval |
-| **Multi-query** | retrieve for several rephrasings, union the results |
-| **HyDE** | draft a hypothetical answer, embed *that* to retrieve |
-| **Agentic RAG** | the agent decides *whether*, *what*, and *how often* to retrieve, and can search again (Layer 4) |
-
-Agentic RAG is where Data meets [Orchestration](../04-orchestration/): retrieval
-becomes a tool the agent calls in a loop, not a fixed pre-step.
+way to update knowledge — re-index, don't re-train. (Going further — hybrid search,
+reranking, query rewriting, agentic RAG — is Chapter 2.)
 
 ---
 
 ## Chapter 2 · The advanced pipeline
 
-Where most RAG quality lives — each addition fixes one of Chapter 1's gaps.
-
-**Better retrieval:**
-
-- **Data tagging** — metadata per chunk (source · ACL · date) → filter + permissions.
-- **Intent** — rewrite/expand the query (+ hybrid keyword) before retrieval.
-- **Reranker** — over-fetch, then rescore to the best few. Biggest lever after chunking.
+Chapter 1 works, but it's naïve. Four levers make retrieval *good* — each closes a
+gap it left open:
 
 ```
-BUILD                                  ANSWER
-  … → chunk → embed → ⛁                query → interpret intent (rewrite / + hybrid)
-       └ tag: source·ACL·date                 → retrieve top-30 ─filter by tag→ ⛁
-                                              → rerank → top-5 → prompt → model → answer
+ANSWER (advanced)
+  query → rewrite / expand intent
+        → hybrid: vector ∪ BM25  ──filter by tag──► ⛁ → top-30
+        → rerank (cross-encoder) → top-5 → prompt → model → answer + citation
 ```
 
-**Production** — wrap it in a data-ops loop: re-index (freshness), version, govern
-(ACL, delete), watch cost/latency, evaluate continuously. Phases 7–8 below cover it;
+- **Hybrid search** — dense vectors nail meaning but miss exact terms (error codes,
+  flags, rare names); fuse them with keyword **BM25** to get both.
+- **Reranking** — over-fetch a cheap top-30, then a **cross-encoder** rescores
+  query+chunk *together* and keeps the best 3–5. Biggest lever after chunking.
+- **Query understanding** — don't trust the user's phrasing: **rewrite/expand** it,
+  **multi-query** (union several rephrasings), or **HyDE** (embed a drafted answer).
+- **Metadata filtering** — the `source · ACL · date` tags from Phase 2 restrict the
+  search (this tenant, since 2026) and enforce permissions.
+
+
+
 [Lab 2](#labs-run-on-a-free-kaggle-gpu) adds the reranker and measures the lift.
-
-```
-        ┌──────── data-ops: freshness · version · govern · cost ────────┐
-        ▼                                                               │
-   [ BUILD ] → [ ⛁ ] → [ ANSWER ] → answer + citation                   │
-        └──────── evaluation (retrieval + faithfulness) ◄───────────────┘
-```
 
 ---
 
@@ -285,6 +261,12 @@ and cost — never a single number.
 A RAG corpus is not build-once. It is a pipeline that must stay fresh, correct,
 and affordable — the data layer's equivalent of MLOps.
 
+```
+        ┌──────── data-ops: freshness · version · govern · cost ────────┐
+        ▼                                                               │
+   [ BUILD ] → [ ⛁ ] → [ ANSWER ] → answer + citation                   │
+        └──────── evaluation (retrieval + faithfulness) ◄───────────────┘
+```
 | Concern | The question |
 |---------|--------------|
 | **Freshness / re-indexing** | source changed — re-embed on write, nightly, or never? Stale chunks give confidently wrong answers. |
