@@ -224,7 +224,8 @@ ANSWER (advanced)
 
 
 
-[Lab 2](#labs-run-on-a-free-kaggle-gpu) adds the reranker and measures the lift.
+[Lab 2](#labs-run-on-a-free-kaggle-gpu) runs all of this over the real k8s docs and
+measures the levers on an independent eval set.
 
 ---
 
@@ -326,12 +327,13 @@ so the layers chain. Setup is in [`labs/README.md`](labs/README.md).
 | Lab | Chapter | What you'll do | Time |
 |-----|---------|----------------|------|
 | **1 · Simple RAG, made visible** | Chapter 1 | over a real public k8s Q&A dataset ([`kubernetes_qa_pairs`](https://huggingface.co/datasets/ItshMoh/kubernetes_qa_pairs)): **print the exact chunks** a query loads, watch **top-k** grow, compare **chunk sizes**, then feed the top chunks to Qwen2.5-3B for a **grounded, cited** answer (and a *"I don't know"* refusal) | ~25 min |
-| **2 · Reranking & evaluation** | Chapter 2 | add a **cross-encoder reranker** (see it reorder), then **measure** the lift — **recall@3** and **MRR**, vector-only vs reranked | ~25 min |
+| **2 · Advanced RAG over real k8s docs** | Chapter 2 | clean + **128-token chunk** the real [`kubernetes/website`](https://github.com/kubernetes/website) docs (~9k chunks), add **metadata filtering**, **hybrid (BM25)**, and a **reranker**, then **measure** them on an **independent** eval set (40 hand-written Qs → gold doc; **hit@3** / **MRR**) | ~12 min |
 
-Lab 1 centers on **retrieval** — the part that decides RAG quality; Lab 2 adds the
-reranker and proves it with numbers. Constraints like the Models labs: free GPU (pick
-**T4**), fp16 LLM, embedder + reranker on CPU, Internet **On** for the first cell
-(installs deps + pulls the dataset, embedder, LLM).
+Lab 1 centers on **retrieval** on a tidy Q&A set; Lab 2 takes the pipeline to the
+**real docs** — messy markdown, real chunking, and an honest eval (questions mapped to
+gold docs, not to the chunks themselves). Constraints like the Models labs: free GPU
+(pick **T4**), fp16 LLM, embedder + reranker on CPU, Internet **On** (Lab 2 also clones
+the docs). The CPU core runs on any GPU; only the grounded LLM answer needs the T4.
 
 ---
 
