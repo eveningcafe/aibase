@@ -1,5 +1,5 @@
 """
-Shared fine-tune entrypoint — Qwen2.5-3B "order-parser" (QLoRA).
+Shared fine-tune entrypoint — Qwen2.5-3B Kubernetes Q&A (QLoRA).
 
 Same task and training logic as Kaggle Lab 2, repackaged as a *platform
 entrypoint* so the two reference platforms can run it unchanged:
@@ -11,62 +11,43 @@ entrypoint* so the two reference platforms can run it unchanged:
     runs; the notebook either bakes this module into the runtime image and calls
     `from train import train`, or inlines the same body.
 
-Hyperparameters arrive as CLI flags (SageMaker passes its `hyperparameters` dict
-this way). Paths follow SageMaker's contract and fall back to local dirs, so the
-script also runs under Kubeflow or on a laptop with no change.
+The data is the **same public Kubernetes Q&A set the 03-data RAG lab uses**
+(`ItshMoh/kubernetes_qa_pairs`): one source, two ways to use it — RAG retrieves it
+at answer time, this fine-tune bakes it into the weights. Hyperparameters arrive as
+CLI flags (SageMaker passes its `hyperparameters` dict this way). Paths follow
+SageMaker's contract with local fallbacks, so the same file runs under Kubeflow or
+on a laptop unchanged.
 """
-import argparse, json, os, random
+import argparse, json, os
 
-# ── the dataset: free-text order message → strict JSON ───────────────────────
-# Identical seeded generator to Lab 2, so results are reproducible across runs
-# and platforms. Lives in the entrypoint so no external data channel is required;
-# pass a real `--train_dir` (or SageMaker `train` channel) to override.
-ITEMS = ["lavender shampoo", "green tea", "running shoes", "USB-C cable",
-         "yoga mat", "coffee beans", "phone case", "water bottle",
-         "notebook", "wireless mouse", "desk lamp", "protein powder"]
-CITIES = ["Hanoi", "Ho Chi Minh City", "Da Nang", "Singapore", "Tokyo", "Seattle"]
-INTENTS = {
-    "order":  ["I'd like to order {q} {item}", "can I get {q} {item}",
-               "please send me {q} {item}", "order {q} {item} for me",
-               "buy {q} {item}", "I want {q} {item} shipped to {city}"],
-    "cancel": ["cancel my order of {item}", "I want to cancel the {item}",
-               "please cancel {q} {item}", "stop the {item} order"],
-    "track":  ["where is my {item}", "track my {item} order",
-               "status of my {item}", "has my {item} shipped yet"],
-}
-SYSTEM = ('You are an order-intent parser. Reply with ONLY a JSON object with keys '
-          '"intent" (order|cancel|track), "item" (string), "qty" (integer), '
-          '"city" (string or null). No prose, no code fences.')
+SYSTEM = "You are a Kubernetes expert. Answer the question clearly and concisely."
 
 
-def _example():
-    intent = random.choice(list(INTENTS)); item = random.choice(ITEMS)
-    qty = random.randint(1, 5); city = random.choice(CITIES)
-    text = random.choice(INTENTS[intent]).format(q=qty, item=item, city=city)
-    # only one phrasing mentions a city, so `city in text` is the gold signal
-    target = {"intent": intent, "item": item,
-              "qty": qty if intent != "track" else 1,
-              "city": city if city in text else None}
-    return {"messages": [
-        {"role": "system", "content": SYSTEM},
-        {"role": "user", "content": text},
-        {"role": "assistant", "content": json.dumps(target, ensure_ascii=False)}]}
+def build_dataset(out_dir, test_frac=0.1, seed=0):
+    """Load kubernetes_qa_pairs → 3-message chat JSONL (train + test), de-duped."""
+    import random
+    from datasets import load_dataset
 
-
-def build_dataset(out_dir, n_train=1000, n_test=180, seed=0):
-    """Write train.jsonl + test.jsonl, de-duped on user text so test isn't leaked."""
-    random.seed(seed)
-    seen, rows = set(), []
-    while len(rows) < n_train + n_test:
-        ex = _example(); key = ex["messages"][1]["content"]
-        if key in seen:
+    raw = load_dataset("ItshMoh/kubernetes_qa_pairs", split="train")
+    seen, pairs = set(), []
+    for r in raw:
+        q, a = (r.get("question") or "").strip(), (r.get("answer") or "").strip()
+        if not q or not a or q.lower() in seen:
             continue
-        seen.add(key); rows.append(ex)
+        seen.add(q.lower()); pairs.append((q, a))
+    random.seed(seed); random.shuffle(pairs)
+    cut = int(len(pairs) * (1 - test_frac))
+
+    def to_chat(q, a):
+        return {"messages": [{"role": "system", "content": SYSTEM},
+                             {"role": "user", "content": q},
+                             {"role": "assistant", "content": a}]}
+
     os.makedirs(out_dir, exist_ok=True)
-    for name, chunk in [("train.jsonl", rows[:n_train]), ("test.jsonl", rows[n_train:])]:
+    for name, chunk in [("train.jsonl", pairs[:cut]), ("test.jsonl", pairs[cut:])]:
         with open(os.path.join(out_dir, name), "w") as f:
-            for r in chunk:
-                f.write(json.dumps(r, ensure_ascii=False) + "\n")
+            for q, a in chunk:
+                f.write(json.dumps(to_chat(q, a), ensure_ascii=False) + "\n")
     return os.path.join(out_dir, "train.jsonl")
 
 
@@ -104,9 +85,9 @@ def train(args):
 
     cfg = SFTConfig(
         output_dir=args.model_dir,
-        per_device_train_batch_size=2, gradient_accumulation_steps=4,
+        per_device_train_batch_size=2, gradient_accumulation_steps=8,
         num_train_epochs=args.epochs, learning_rate=args.lr,
-        logging_steps=10, save_strategy="no", max_length=512, packing=False,
+        logging_steps=5, save_strategy="no", max_length=1024, packing=False,
         fp16=False,  # trainable adapters are fp32; bnb computes the 4-bit base in fp16
         optim="paged_adamw_8bit" if use_qlora else "adamw_torch",
         report_to=("mlflow" if os.environ.get("MLFLOW_TRACKING_URI") else "none"))
@@ -122,7 +103,7 @@ def train(args):
 def _args():
     p = argparse.ArgumentParser()
     p.add_argument("--model_name", default=os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-3B-Instruct"))
-    p.add_argument("--epochs", type=int, default=1)
+    p.add_argument("--epochs", type=int, default=3)
     p.add_argument("--lr", type=float, default=2e-4)
     p.add_argument("--lora_r", type=int, default=16)
     p.add_argument("--lora_alpha", type=int, default=32)

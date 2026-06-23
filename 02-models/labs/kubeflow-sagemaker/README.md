@@ -1,8 +1,8 @@
 # Lab · Fine-tune on a platform — Kubeflow & SageMaker
 
 The **same fine-tune as [Kaggle Lab 2](../cloud-kaggle/lab2_finetune_kaggle.ipynb)**
-— QLoRA on `Qwen2.5-3B-Instruct` to turn a free-text order message into strict
-JSON — but written in the language of the two reference platforms from the
+— QLoRA on `Qwen2.5-3B-Instruct` over the **same Kubernetes Q&A data the 03-data
+RAG lab uses** — but written in the language of the two reference platforms from the
 [Systematic view](../../README.md#systematic-view--kubeflow---sagemaker):
 **Kubeflow Trainer** (open, on your Kubernetes) and **Amazon SageMaker** (managed).
 
@@ -52,7 +52,7 @@ unchanged.
 
 Kaggle Lab 2 taught *what* fine-tuning does. This lab shows *how the same step
 lives inside a platform*: a registry makes the artifact versioned instead of a
-file on a laptop, an eval gate (Lab 3's numbers, as a pipeline step) blocks a
+file on a laptop, an eval gate (a held-out eval, as a pipeline step) blocks a
 regression before it ships, and a serving surface (KServe / Endpoint) puts it
 online — the loop from the [Systematic view](../../README.md#systematic-view--kubeflow---sagemaker),
 made real on a cluster.

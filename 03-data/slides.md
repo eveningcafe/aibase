@@ -28,6 +28,21 @@ slides of concept per phase, then the notebook.
 
 ---
 
+## Agenda
+
+1. **Why this layer** — knowledge vs behaviour, and RAG vs long context
+2. **The pipeline** — sources → chunk → embed → store → retrieve → answer → **evaluate** *(Phases 1–7)*
+3. **RAG on production** — the advanced pipeline · **LangChain** · the **RAG platform**
+4. **Labs** — build simple + advanced RAG on a free Kaggle **T4**
+
+<!--
+The map. Part 1 motivates the layer; Part 2 builds and measures the naive pipeline;
+Part 3 takes it to production (better retrieval, a framework, a platform); then the
+hands-on labs. A few slides of concept per phase, then the notebook.
+-->
+
+---
+
 ## Why this layer
 
 A base model is **frozen at its knowledge cutoff** and has never seen your private
@@ -92,9 +107,6 @@ that follows. Not either/or — prompt caching offsets long context for *static*
 ## The simple pipeline
 
 ![w:980](assets/diagrams/rag-pipeline.svg)
-
-**Index once, offline.** Per query: embed → fetch **top-k** → prompt → answer.
-Naïve on purpose (similarity-only, fixed top-k) — the **advanced pipeline** closes the gaps; **Lab 1** builds it.
 
 <!--
 The whole layer on one slide. One shared vector store: INDEX writes it once; ANSWER reads
@@ -224,22 +236,67 @@ Lab 1 shows both a grounded cited answer and the refusal on an out-of-corpus que
 
 ---
 
-## Phase 7 · Evaluation
+## Phase 7 · Evaluation — measure **both** stages
 
-"The demo answered well" is not evidence. RAG has **two** stages that can each fail:
+"The demo answered well" is **not evidence**. RAG fails in two independent places, so you
+must measure — and debug — each separately:
 
-| Stage | Question | Metrics |
-|-------|----------|---------|
-| **Retrieval** | did we fetch the right chunks? | recall@k, precision@k, MRR, hit-rate |
-| **Generation** | did the answer use them faithfully? | faithfulness, relevance, correctness |
+| Stage | Question it answers |
+|-------|---------------------|
+| **① Retrieval** | did we fetch the right chunks? |
+| **② Generation** | did the answer use them faithfully? |
 
-Killer failure = **hallucination** (fluent but unsupported). **Faithfulness** measures it.
-Diagnose by stage: right chunk retrieved but wrong answer → **generation**; right answer
-impossible → **retrieval**. Tools: **RAGAS** (LLM-as-judge).
+**Diagnose by stage** — first ask: *was the correct chunk in the context?*
+
+- ✅ correct chunk retrieved **but the answer is wrong** → **generation** problem (prompt, model, or context too noisy)
+- ❌ correct chunk **was never retrieved** → **retrieval** problem (chunking, embedding, top-k, add a reranker)
 
 <!--
-Measure BEFORE you optimise — this is why eval comes before the advanced levers. Report
-quality WITH latency + cost, never one number. Lab 2 evaluates on an independent set.
+Measure BEFORE you optimise — this is why eval comes before the advanced levers. The
+debug question is always "is the right chunk in the context?": yes → generation, no →
+retrieval. Lab 1 prints the chunks so students can answer it directly.
+-->
+
+---
+
+## Phase 7 · Retrieval metrics — *did we fetch the right chunks?*
+
+Scored against a **gold set** (each question tagged with the chunk/doc that is truly relevant):
+
+| Metric | What it asks | Intuition |
+|--------|--------------|-----------|
+| **recall@k** | of *all* relevant chunks, how many made the top-k? | did we **miss** anything? |
+| **precision@k** | of the *k* chunks fetched, how many are relevant? | how much **noise** did we pull in? |
+
+*Example:* top-k = 5, and 2 of the 3 relevant chunks land in it → **recall@5 = 2/3 ≈ 0.67**;
+if only those 2 of the 5 are relevant → **precision@5 = 2/5 = 0.4**.
+Lab 2 measures retrieval on 40 hand-written questions mapped to a gold doc.
+
+<!--
+These need ground truth — questions mapped to gold chunks, NOT to the chunks the system
+itself returned (that would be circular). recall vs precision is the classic miss-vs-noise
+trade-off; raising top-k helps recall but hurts precision.
+-->
+
+---
+
+## Phase 7 · Generation metrics & hallucination
+
+**Hallucination** = a fluent, confident answer **not supported by the retrieved context** —
+the killer failure, because it looks *identical* to a correct answer.
+
+| Metric | What it asks |
+|--------|--------------|
+| **faithfulness** | is **every claim** in the answer grounded in a chunk? *(this is what catches hallucination)* |
+| **answer relevance** | does the answer actually address the question asked? |
+
+**RAGAS** scores these automatically with an **LLM-as-judge** — a second LLM reads
+*question + context + answer* and grades it, so you evaluate hundreds of cases without
+hand-reading each. Report quality **with latency + cost**, never a single number.
+
+<!--
+LLM-as-judge: cheap and scalable, but the judge itself can err — spot-check it. Faithfulness
+is the one to watch in production; a confidently wrong, ungrounded answer is the worst outcome.
 -->
 
 ---

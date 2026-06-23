@@ -24,8 +24,9 @@ Upload each `.ipynb` to Kaggle (or import from this repo) and **Run All**.
 
 1. **Lab 1 — serving.** Installs Ollama, pulls Qwen2.5-3B at Q4 + fp16, benchmarks
    each, checks VRAM. Self-contained.
-2. **Lab 2 — fine-tune.** Builds the dataset, shows the base model, QLoRA-trains a
-   strict-JSON order parser, logs to MLflow, shows before/after. Writes
+2. **Lab 2 — fine-tune.** Loads the same Kubernetes Q&A data as the 03-data RAG
+   lab, shows the base model, QLoRA-trains a k8s assistant, logs to MLflow, shows
+   before/after on the RAG lab's question. Writes
    `adapters/lora`, `data/test.jsonl`, `mlflow.db` to `/kaggle/working`.
    **Save Version** so the output is reusable.
 3. **Lab 3 — eval.** **Add Input → Notebook Output → pick your Lab 2 version**, so
