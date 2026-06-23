@@ -64,6 +64,29 @@ builds it end-to-end.
 
 ---
 
+
+### RAG vs long context 
+
+| Dimension | Long context — stuff the window | RAG — retrieve first |
+|-----------|---------------------------------|----------------------|
+| **Infrastructure** | the "no-stack stack" — no DB, embedder, reranker, or sync to keep | heavy: chunking + embedder + vector DB + reranker + keeping vectors in sync |
+| **Retrieval reliability** | no retrieval step — the model sees everything | semantic search is probabilistic → **silent failure**: the answer was there, retrieval just didn't return it |
+| **Cross-doc / global reasoning** | sees full documents → can spot what's *missing* (e.g. "which requirements were omitted from the release?") | only isolated snippets → can't reason over the *gap between* documents |
+| **Cost per query** | reprocesses every token on **every** call (a 500-pg manual ≈ 250k tokens each time) | pays the processing cost **once at index time**; fetches a few chunks per query |
+| **Accuracy at scale** | attention dilutes — a needle buried in a huge context is missed or hallucinated | top-k (say 5 chunks) removes the haystack → the model focuses on signal |
+| **Data ceiling** | ~1M tokens is a drop against enterprise data lakes (TB–PB) | a retrieval layer filters an effectively infinite corpus down to what fits |
+
+The decision rule that falls out:
+
+- **Bounded data + global reasoning** — one legal contract, a single book to
+  summarize → **long context** wins (simpler stack, sees the whole picture).
+- **Fresh, private, or effectively infinite knowledge** — an enterprise corpus →
+  **RAG** remains the only viable warehouse.
+
+Caveat on the cost line: **prompt caching** offsets long context for *static* data,
+but a *dynamic* corpus pays the full token tax on every request.
+
+
 ## Phase 1 · Sources
 
 The raw knowledge you want the model to use. It arrives in three broad shapes,
@@ -257,64 +280,74 @@ and cost — never a single number.
 
 ---
 
-## Phase 8 · Data-ops — keeping it alive
+## Chapter 3 · Frameworks & the fleet
 
-A RAG corpus is not build-once. It is a pipeline that must stay fresh, correct,
-and affordable — the data layer's equivalent of MLOps.
+Chapters 1–2 built the pipeline **by hand** so every phase is visible. The real world
+changes two things: you don't hand-write it (a **framework** does), and you don't run
+*one* of them (you run *many*). This chapter is that zoom-out.
+
+### Frameworks · LangChain in one minute
+
+**LangChain** is a general framework for LLM apps — agents, chatbots, workflows — of
+which RAG is the most common. It adds **no new concept** to this layer: it
+*productizes the seven phases*, turning each into one pre-built, swappable component.
+(LlamaIndex and Haystack are the main alternatives.)
+
+| Phase | By hand (Chapters 1–2) | LangChain |
+|-------|------------------------|-----------|
+| 1 · Sources | `{id, text, meta}` dicts | `Document(page_content, metadata)` |
+| 2 · Chunk | hand-written splitter | `RecursiveCharacterTextSplitter` |
+| 3 · Embeddings | `SentenceTransformer.encode` | `HuggingFaceEmbeddings` |
+| 4 · Vector store | `faiss.IndexFlatIP` + `.add` | `FAISS.from_documents` |
+| 5 · Retrieval | hand-written `retrieve(q, k)` | `store.as_retriever(k=…)` |
+| 6 · RAG prompt | manual chat template + `.generate` | `ChatPromptTemplate \| chat` (LCEL) |
+
+Two things stay true whatever the framework. It's **client-side orchestration** — the
+chain runs *in your process* and calls model/DB endpoints; there's no "submit a job to
+their cloud" (running on managed infra is a *deploy* step, not the chain). And
+**evaluation lives outside the chain** — a framework writes the pipeline; it doesn't
+measure or operate it.
+
+Learn the phases by hand and LangChain is just learning which method wraps each one —
+proven in [`labs/lab1-langchain/`](labs/lab1-langchain/): Lab 1 rebuilt
+component-for-component, same numbers out.
+
+### The fleet · from N notebooks to one platform
+
+The bigger shift is operational. You stop maintaining *N notebooks* and start running
+**one platform that many RAG apps plug into**. The app code (LangChain/LlamaIndex)
+becomes the thin, per-app part; the platform — everything around it — is the real job.
+The seven phases stop being code each team rewrites and become **shared services +
+per-app config**:
 
 ```
-        ┌──────── data-ops: freshness · version · govern · cost ────────┐
-        ▼                                                               │
-   [ BUILD ] → [ ⛁ ] → [ ANSWER ] → answer + citation                   │
-        └──────── evaluation (retrieval + faithfulness) ◄───────────────┘
+        ┌──────────────────  PLATFORM (you own)  ──────────────────┐
+        │  Embedding svc   Vector store     Model gateway          │
+        │  (versioned)     (multi-tenant)   (LLM+reranker, quota)  │
+        │  Ingestion orchestrator   Eval harness   Observability   │
+        │  Secrets / IAM / ACL      Cost metering                  │
+        └───────────▲──────────────────────────────▲───────────────┘
+                    │ plug in via config           │
+   app-A (HR docs)      app-B (support KB)      app-C (legal) …
+   corpus + chunk params + top-k + prompt + model  ← each team sets
 ```
-| Concern | The question |
-|---------|--------------|
-| **Freshness / re-indexing** | source changed — re-embed on write, nightly, or never? Stale chunks give confidently wrong answers. |
-| **Versioning** | which corpus + embedding-model version produced this answer? (reproducibility, like the model registry) |
-| **Cost** | embedding + storage + per-query retrieval + the extra prompt tokens RAG adds |
-| **Latency** | retrieval + rerank time is added to every request |
-| **Governance** | PII, ACLs enforced at retrieval, the right to delete a document (and its vectors), audit/citation trail |
 
-The deletion case is sharp: if a user exercises "delete my data", the chunks
-*and their embeddings* must go — a copy left in the vector store is still a leak.
+- **Per-app = config, not infra** — corpus, chunk size/overlap, top-k, hybrid on/off,
+  prompt, model. A few lines a team owns.
+- **Platform = shared services** — one *versioned* embedder (swap it ⇒ re-embed every
+  corpus), one multi-tenant vector store (a namespace + ACL per app), one model gateway
+  (quota + cost per app), orchestrated ingestion, and an **eval gate in CI** (a change
+  that drops hit@k / faithfulness fails the build, like a red test).
 
----
+The day-2 concerns scale with the fleet and get attributed per app: **freshness**
+(re-index on change or nightly — stale chunks answer confidently wrong), **cost**
+(embeddings + storage + retrieval + the extra prompt tokens RAG adds), **governance**
+(PII, ACL enforced *at retrieval*, right-to-delete — the vectors must go too, a copy
+left behind is still a leak), and **silent retrieval failures** (the answer was there,
+retrieval just missed it — only monitoring + continuous eval catch it).
 
-## When RAG vs fine-tune vs just use the context window
-
-- **Use the context window** — the knowledge is small and fits in the prompt
-  (a few documents). Simplest; no infrastructure. As context windows grow, this
-  covers more cases — but it re-pays the token cost on *every* call and can't
-  scale to millions of documents.
-- **RAG** — knowledge is large, changes, or is private. The default for grounding
-  in your own corpus.
-- **Fine-tune** ([`02-models/`](../02-models/)) — you need *behaviour*, not facts.
-  Often **combined** with RAG: fine-tune the tone, retrieve the facts.
-
-In short: **small & static → context window · large/fresh/private → RAG ·
-behaviour → fine-tune.** They stack.
-
-### RAG vs long context 
-
-| Dimension | Long context — stuff the window | RAG — retrieve first |
-|-----------|---------------------------------|----------------------|
-| **Infrastructure** | the "no-stack stack" — no DB, embedder, reranker, or sync to keep | heavy: chunking + embedder + vector DB + reranker + keeping vectors in sync |
-| **Retrieval reliability** | no retrieval step — the model sees everything | semantic search is probabilistic → **silent failure**: the answer was there, retrieval just didn't return it |
-| **Cross-doc / global reasoning** | sees full documents → can spot what's *missing* (e.g. "which requirements were omitted from the release?") | only isolated snippets → can't reason over the *gap between* documents |
-| **Cost per query** | reprocesses every token on **every** call (a 500-pg manual ≈ 250k tokens each time) | pays the processing cost **once at index time**; fetches a few chunks per query |
-| **Accuracy at scale** | attention dilutes — a needle buried in a huge context is missed or hallucinated | top-k (say 5 chunks) removes the haystack → the model focuses on signal |
-| **Data ceiling** | ~1M tokens is a drop against enterprise data lakes (TB–PB) | a retrieval layer filters an effectively infinite corpus down to what fits |
-
-The decision rule that falls out:
-
-- **Bounded data + global reasoning** — one legal contract, a single book to
-  summarize → **long context** wins (simpler stack, sees the whole picture).
-- **Fresh, private, or effectively infinite knowledge** — an enterprise corpus →
-  **RAG** remains the only viable warehouse.
-
-Caveat on the cost line: **prompt caching** offsets long context for *static* data,
-but a *dynamic* corpus pays the full token tax on every request.
+**One-liner:** *you don't write RAG, you operate a platform; each app is config on
+top.* That is **data-ops at fleet scale** — the job the ops/deploy layer builds.
 
 ---
 
@@ -336,31 +369,3 @@ gold docs, not to the chunks themselves). Constraints like the Models labs: free
 the docs). The CPU core runs on any GPU; only the grounded LLM answer needs the T4.
 
 ---
-
-## Aside · the data wall
-
-The Models aside looked *up* the capability axis (superintelligence). The Data
-layer's horizon question looks at its own fuel: **are we running out of training
-data?**
-
-Frontier pre-training has consumed much of the high-quality public text on the
-internet. Projections (Epoch AI) put the usable public-text stock on track to be
-exhausted around the **late 2020s** — the "data wall." Three responses are in
-play:
-
-- **Synthetic data** — models generate their own training data. Powerful, but
-  risks **model collapse**: train on too much model output and quality degrades
-  as the distribution narrows. Needs careful filtering and a human/real-data
-  anchor.
-- **Private & proprietary data** — the public web is tapped out, so the moat moves
-  to data nobody else has: enterprise records, licensed archives, user
-  interactions. This is *why* the data layer captures real money.
-- **Human labeling at scale** — RLHF and high-quality annotation as a paid
-  industry.
-
-This closes the loop with the revenue pyramid in the top-level
-[`README.md`](../README.md): **Scale AI ≈ $2B, and Meta paid $14.3B for a 49%
-stake.** That price isn't for software — it's for the *data and the labeling
-pipeline*. When public text runs low, whoever owns the data (and the means to
-make more of it) holds the leverage. The model layer gets the headlines; the data
-layer increasingly holds the moat.

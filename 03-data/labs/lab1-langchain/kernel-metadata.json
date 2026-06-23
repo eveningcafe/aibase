@@ -1,0 +1,13 @@
+{
+  "id": "ngohoa211/lab1-simple-rag-langchain",
+  "title": "lab1 simple rag langchain",
+  "code_file": "lab1_simple_rag_langchain_kaggle.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}

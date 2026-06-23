@@ -1,4 +1,4 @@
-# Lab · Data layer (free Kaggle GPU)
+# Lab · Data layer 
 
 Hands-on companion to [`../README.md`](../README.md). **Two labs (~25 min each)** that
 mirror the README's chapters — **Lab 1 = simple pipeline, Lab 2 = advanced pipeline** —
