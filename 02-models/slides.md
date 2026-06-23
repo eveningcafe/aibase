@@ -266,6 +266,36 @@ monitors. Lab 2 wires in MLflow so tracking isn't a separate chore.
 
 ---
 
+## Systematic view — Kubeflow ≈ SageMaker
+
+The seven phases are one **AI lifecycle**. Two platforms implement it the same way —
+**Kubeflow** (open, on Kubernetes) and **Amazon SageMaker** (managed):
+
+| AI lifecycle stage | Kubeflow | AWS (SageMaker) |
+|--------------------|----------|-----------------|
+| Data Preparation | Spark Operator | Glue / EMR |
+| Model Development | Notebooks | Studio Notebooks |
+| Training & fine-tuning | Trainer | Training Jobs |
+| Optimization | Katib | Automatic Model Tuning |
+| Serving | KServe \* | Endpoints |
+| Orchestrate the steps | Pipelines | Pipelines |
+| Metadata + artifacts | Hub | Model Registry |
+| Run everything | Kubernetes | EKS / EC2 |
+
+\* KServe is a Kubeflow **ecosystem** project. **Lab 2′** runs Lab 2's fine-tune on
+both — same `train.py`, two launch idioms (a *function* vs a *script*).
+
+<!--
+The capstone: our seven phases aren't ad-hoc — they're the lifecycle every
+platform implements. Kubeflow = open, on your Kubernetes; SageMaker = AWS-managed,
+same stages. Keep Kubeflow's real component names. The labs/kubeflow-sagemaker/
+lab re-expresses the Kaggle fine-tune in both: Kubeflow Trainer takes a function,
+SageMaker takes a script, both run the identical train.py. The eval gate (Lab 3)
+becomes a Pipelines step that blocks a regressed deploy.
+-->
+
+---
+
 ## Aside · superintelligence
 
 The other end of the axis: one system above humans in *every* domain.

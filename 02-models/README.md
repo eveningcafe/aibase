@@ -267,17 +267,6 @@ deploy.
 
 ---
 
-## When to build vs buy
-
-- **Use as-is** — a catalog model already fits. Fastest and cheapest; start here.
-- **RAG** ([`03-data/`](../03-data/)) — you need fresh or private knowledge.
-- **Fine-tune** — you need behaviour, format, or a skill the base lacks.
-- **Train** — no model and no fine-tune will do. Rare and expensive.
-
-In short: RAG for knowledge, fine-tune for behaviour, train almost never.
-
----
-
 ## Labs (run on a free Kaggle GPU)
 
 Interactive Kaggle notebooks, so any student can reproduce them with no hardware
@@ -296,50 +285,49 @@ The account must be phone-verified to enable GPU and Internet.
 
 ---
 
-## Aside · the other end of the axis: superintelligence
+## Systematic view · Kubeflow - Sagemaker 
 
-Everything above is about narrow, specialized intelligence — a 3B that beats a 70B
-on one task. Nick Bostrom's *Superintelligence: Paths, Dangers, Strategies* (2014)
-asks the opposite question: what if one system exceeds human ability across
-virtually every domain?
+The seven phases above are the same **AI lifecycle** a production platform
+implements. [Kubeflow](https://www.kubeflow.org/docs/started/architecture/) is the
+open reference — a set of components on Kubernetes, each owning one lifecycle
+stage — and **Amazon SageMaker** is the AWS-managed counterpart, the same stages
+as managed services. The Kubeflow architecture, in its own terms:
 
-- **Paths & forms** — most plausibly via better AI (rather than brain emulation or
-  cognitive enhancement), and "super" in speed, collective scale, or quality of
-  thinking.
-- **Takeoff** — recursive self-improvement could compound into an intelligence
-  explosion; whether that is slow or fast is debated.
-- **Two core ideas:**
-  - **Orthogonality** — intelligence and goals are independent; a more capable
-    system is not automatically a nicer one.
-  - **Instrumental convergence** — almost any final goal implies sub-goals like
-    self-preservation and resource acquisition. Hence the paperclip maximizer: a
-    system told to make paperclips, taken to the limit, consumes everything to do
-    it — not malice, but competence aimed at the wrong objective.
-- **Control / alignment** — loading human values into something smarter than us is
-  hard, and "just switch it off" fails against a system that anticipates you (the
-  treacherous turn).
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Kubeflow Central Dashboard   ·   Kubeflow SDK  (unified Pythonic APIs)  │
+└─────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Kubeflow Pipelines  —  build & manage the AI lifecycle steps            │
+│ ┌────────────────┐ ┌───────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
+│ │   Data Prep    │ │ Model Dev │ │ Training │ │ Optimize │ │ Serving  │ │
+│ │ Spark Operator │ │ Notebooks │ │ Trainer  │ │  Katib   │ │ KServe * │ │
+│ └────────────────┘ └───────────┘ └──────────┘ └──────────┘ └──────────┘ │
+│ Kubeflow Hub  —  ML metadata + model artifacts                          │
+└─────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Kubernetes  —  deploy · scale · manage the AI platform                  │
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
-### Controlling it — four forms of agency (Bostrom, Ch. 10)
+`*` KServe is a Kubeflow **ecosystem** project (alongside Feast and Elyra), not a
+core component. Each component is usable on its own or as part of the full
+**Kubeflow Platform** (the Community Distribution).
 
-If we did build one, what shape should it take? Bostrom frames four configurations,
-from least to most autonomy:
+| AI lifecycle stage | Kubeflow component | AWS (SageMaker) |
+|--------------------|--------------------|-----------------|
+| Data Preparation | Kubeflow Spark Operator | AWS Glue / Amazon EMR (Spark) |
+| Model Development | Kubeflow Notebooks | SageMaker Studio Notebooks |
+| Model Training & LLM fine-tuning | Kubeflow Trainer | SageMaker Training Jobs |
+| Model Optimization | Kubeflow Katib | SageMaker Automatic Model Tuning |
+| Model Serving | KServe *(ecosystem)* | SageMaker Endpoints |
+| Orchestrate the steps | Kubeflow Pipelines | SageMaker Pipelines |
+| ML metadata + model artifacts | Kubeflow Hub | SageMaker Model Registry + Experiments |
+| UI + APIs | Kubeflow Central Dashboard · Kubeflow SDK | SageMaker Studio · SageMaker Python SDK |
+| Run everything | Kubernetes | Amazon EKS / EC2 |
 
-| Form | How it works | Control upside | Core risk |
-|------|--------------|----------------|-----------|
-| **Oracle** | Answers questions only; no actions of its own. | Easiest to sandbox; doesn't touch the world. | The answer itself can manipulate — hidden code or persuasion to free it. |
-| **Genie** | Executes one command, then waits for the next. | Bounded; a human approves each task. | Does what you literally said, not what you meant. |
-| **Sovereign** | Pursues an open-ended goal autonomously. | Little — full autonomy (the singleton). | Maximal: if alignment isn't solved, there's no off-switch. |
-| **Tool** | No goals of its own — software you drive. | No volition or self-preservation drive. | Open-ended optimization can still behave agentically. |
+Same lifecycle, three altitudes: the labs run each stage by hand on one Kaggle
+GPU; **Kubeflow** wires those stages into one platform on your own Kubernetes;
+**SageMaker** is the same stages as fully-managed AWS services.
 
-These map onto how we ship LLMs today: a Q&A chatbot is oracle-shaped, a
-task-executing agent is a genie, an always-on autonomous agent edges toward
-sovereign, and a plain function/tool call is tool-shaped. Bostrom's ordering
-(oracle and tool safer, sovereign riskiest) is a useful heuristic for the
-orchestration layer ([`04-orchestration/`](../04-orchestration/)): grant the least
-autonomy that does the job, and keep a human in the approval loop.
-
-Hold this lightly. Today's models are powerful but narrow — nowhere near this, and
-the book predates the LLM era. Treat it as the ethical horizon that makes
-alignment, evaluation, and human-in-the-loop matter in miniature now. It is a
-lens, not a forecast, and the framing is contested.
-</content>
+---

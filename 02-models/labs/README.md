@@ -12,6 +12,18 @@ reproduce them with no hardware of their own.
 
 Setup, chaining, and gotchas live in [`cloud-kaggle/README.md`](cloud-kaggle/README.md).
 
+### Beyond Kaggle · the same fine-tune on a platform
+
+| Lab | Topic | Folder |
+|-----|-------|--------|
+| 2′ | **Fine-tune on Kubeflow & SageMaker** | [`kubeflow-sagemaker/`](kubeflow-sagemaker/) |
+
+Lab 2′ re-expresses Lab 2's QLoRA fine-tune in the language of the two reference
+platforms from the [Systematic view](../README.md#systematic-view--kubeflow---sagemaker)
+— **Kubeflow Trainer** and **Amazon SageMaker**. It needs a cluster or an AWS
+account (not free), so it's a *translation/reference* lab; the runnable version
+stays on Kaggle.
+
 ---
 
 ## The environment
