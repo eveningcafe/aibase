@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+<rect width="1280" height="720" fill="#FFFFFF"/>
+<text x="40" y="58" font-family="Arial,Helvetica,sans-serif" font-size="38" fill="#232F3E" text-anchor="start" font-weight="bold">Amazon SageMaker</text>
+<text x="410" y="58" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#64748B" text-anchor="start" font-weight="normal">— managed ML platform on AWS</text>
+<rect x="40" y="78" width="1200" height="56" rx="12" ry="12" fill="#FFFBF5" stroke="#F1D2A6" stroke-width="1.5"/>
+<text x="62" y="112.0" font-family="Arial,Helvetica,sans-serif" font-size="16" fill="#64748B" text-anchor="start" font-weight="bold">Interface &amp; SDK</text>
+<rect x="340" y="88" width="878" height="36" rx="9" ry="9" fill="#FFFFFF" stroke="#F1D2A6" stroke-width="1.2"/>
+<text x="358" y="107.0" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#C05621" text-anchor="start" font-weight="bold">SageMaker Studio · SageMaker Python SDK</text>
+<text x="1204" y="107.0" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#64748B" text-anchor="end" font-weight="normal">+ boto3</text>
+<rect x="40" y="146" width="1200" height="56" rx="12" ry="12" fill="#FFFBF5" stroke="#F1D2A6" stroke-width="1.5"/>
+<text x="62" y="180.0" font-family="Arial,Helvetica,sans-serif" font-size="16" fill="#64748B" text-anchor="start" font-weight="bold">Orchestrate</text>
+<rect x="340" y="156" width="878" height="36" rx="9" ry="9" fill="#FFFFFF" stroke="#F1D2A6" stroke-width="1.2"/>
+<text x="358" y="175.0" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#C05621" text-anchor="start" font-weight="bold">SageMaker Pipelines</text>
+<text x="1204" y="175.0" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#64748B" text-anchor="end" font-weight="normal">orchestrate the ML workflow</text>
+<line x1="640.0" y1="202" x2="640.0" y2="213" stroke="#64748B" stroke-width="2"/>
+<path d="M 635.0 213 L 645.0 213 L 640.0 222 Z" fill="#64748B"/>
+<rect x="40" y="222" width="226" height="204" rx="12" ry="12" fill="#FFF6EC" stroke="#F1D2A6" stroke-width="1.5"/>
+<rect x="40" y="222" width="226" height="46" rx="12" ry="12" fill="#232F3E" stroke="none" stroke-width="1"/>
+<rect x="40" y="252" width="226" height="16" rx="0" ry="0" fill="#232F3E" stroke="none" stroke-width="1"/>
+<text x="153.0" y="252" font-family="Arial,Helvetica,sans-serif" font-size="17" fill="#FFFFFF" text-anchor="middle" font-weight="bold">Data Prep</text>
+<text x="56" y="314" font-family="Arial,Helvetica,sans-serif" font-size="17" fill="#C05621" text-anchor="start" font-weight="bold">Glue / EMR</text>
+<text x="56" y="342" font-family="Arial,Helvetica,sans-serif" font-size="13.5" fill="#64748B" text-anchor="start" font-weight="normal">Spark ETL · Data</text>
+<text x="56" y="362" font-family="Arial,Helvetica,sans-serif" font-size="13.5" fill="#64748B" text-anchor="start" font-weight="normal">Wrangler</text>
+<line x1="268" y1="324.0" x2="276" y2="324.0" stroke="#64748B" stroke-width="2.5"/>
+<path d="M 276 319.0 L 284 324.0 L 276 329.0 Z" fill="#64748B"/>
+<rect x="283" y="222" width="226" height="204" rx="12" ry="12" fill="#FFF6EC" stroke="#F1D2A6" stroke-width="1.5"/>
+<rect x="283" y="222" width="226" height="46" rx="12" ry="12" fill="#232F3E" stroke="none" stroke-width="1"/>
+<rect x="283" y="252" width="226" height="16" rx="0" ry="0" fill="#232F3E" stroke="none" stroke-width="1"/>
+<text x="396.0" y="252" font-family="Arial,Helvetica,sans-serif" font-size="17" fill="#FFFFFF" text-anchor="middle" font-weight="bold">Model Dev</text>
+<text x="299" y="314" font-family="Arial,Helvetica,sans-serif" font-size="17" fill="#C05621" text-anchor="start" font-weight="bold">Studio Notebooks</text>
+<text x="299" y="342" font-family="Arial,Helvetica,sans-serif" font-size="13.5" fill="#64748B" text-anchor="start" font-weight="normal">interactive development</text>
+<line x1="511" y1="324.0" x2="519" y2="324.0" stroke="#64748B" stroke-width="2.5"/>
+<path d="M 519 319.0 L 527 324.0 L 519 329.0 Z" fill="#64748B"/>
+<rect x="526" y="222" width="226" height="204" rx="12" ry="12" fill="#FFF6EC" stroke="#F1D2A6" stroke-width="1.5"/>
+<rect x="526" y="222" width="226" height="46" rx="12" ry="12" fill="#232F3E" stroke="none" stroke-width="1"/>
+<rect x="526" y="252" width="226" height="16" rx="0" ry="0" fill="#232F3E" stroke="none" stroke-width="1"/>
+<text x="639.0" y="252" font-family="Arial,Helvetica,sans-serif" font-size="17" fill="#FFFFFF" text-anchor="middle" font-weight="bold">Training</text>
+<text x="542" y="314" font-family="Arial,Helvetica,sans-serif" font-size="17" fill="#C05621" text-anchor="start" font-weight="bold">Training Jobs</text>
+<text x="542" y="342" font-family="Arial,Helvetica,sans-serif" font-size="13.5" fill="#64748B" text-anchor="start" font-weight="normal">train + fine-tune</text>
+<line x1="754" y1="324.0" x2="762" y2="324.0" stroke="#64748B" stroke-width="2.5"/>
+<path d="M 762 319.0 L 770 324.0 L 762 329.0 Z" fill="#64748B"/>
+<rect x="769" y="222" width="226" height="204" rx="12" ry="12" fill="#FFF6EC" stroke="#F1D2A6" stroke-width="1.5"/>
+<rect x="769" y="222" width="226" height="46" rx="12" ry="12" fill="#232F3E" stroke="none" stroke-width="1"/>
+<rect x="769" y="252" width="226" height="16" rx="0" ry="0" fill="#232F3E" stroke="none" stroke-width="1"/>
+<text x="882.0" y="252" font-family="Arial,Helvetica,sans-serif" font-size="17" fill="#FFFFFF" text-anchor="middle" font-weight="bold">Optimize</text>
+<text x="785" y="314" font-family="Arial,Helvetica,sans-serif" font-size="17" fill="#C05621" text-anchor="start" font-weight="bold">Automatic Model Tuning</text>
+<text x="785" y="342" font-family="Arial,Helvetica,sans-serif" font-size="13.5" fill="#64748B" text-anchor="start" font-weight="normal">hyperparameter search</text>
+<line x1="997" y1="324.0" x2="1005" y2="324.0" stroke="#64748B" stroke-width="2.5"/>
+<path d="M 1005 319.0 L 1013 324.0 L 1005 329.0 Z" fill="#64748B"/>
+<rect x="1012" y="222" width="226" height="204" rx="12" ry="12" fill="#FFF6EC" stroke="#F1D2A6" stroke-width="1.5"/>
+<rect x="1012" y="222" width="226" height="46" rx="12" ry="12" fill="#232F3E" stroke="none" stroke-width="1"/>
+<rect x="1012" y="252" width="226" height="16" rx="0" ry="0" fill="#232F3E" stroke="none" stroke-width="1"/>
+<text x="1125.0" y="252" font-family="Arial,Helvetica,sans-serif" font-size="17" fill="#FFFFFF" text-anchor="middle" font-weight="bold">Serving</text>
+<text x="1028" y="314" font-family="Arial,Helvetica,sans-serif" font-size="17" fill="#C05621" text-anchor="start" font-weight="bold">Endpoints</text>
+<text x="1028" y="342" font-family="Arial,Helvetica,sans-serif" font-size="13.5" fill="#64748B" text-anchor="start" font-weight="normal">real-time · serverless ·</text>
+<text x="1028" y="362" font-family="Arial,Helvetica,sans-serif" font-size="13.5" fill="#64748B" text-anchor="start" font-weight="normal">async</text>
+<line x1="640.0" y1="426" x2="640.0" y2="437" stroke="#64748B" stroke-width="2"/>
+<path d="M 635.0 437 L 645.0 437 L 640.0 446 Z" fill="#64748B"/>
+<rect x="40" y="446" width="1200" height="56" rx="12" ry="12" fill="#FFFBF5" stroke="#F1D2A6" stroke-width="1.5"/>
+<text x="62" y="480.0" font-family="Arial,Helvetica,sans-serif" font-size="16" fill="#64748B" text-anchor="start" font-weight="bold">Metadata + artifacts</text>
+<rect x="340" y="456" width="878" height="36" rx="9" ry="9" fill="#FFFFFF" stroke="#F1D2A6" stroke-width="1.2"/>
+<text x="358" y="475.0" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#C05621" text-anchor="start" font-weight="bold">Model Registry + Experiments</text>
+<text x="1204" y="475.0" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#64748B" text-anchor="end" font-weight="normal">versioned model packages</text>
+<rect x="40" y="514" width="1200" height="56" rx="12" ry="12" fill="#FFFBF5" stroke="#F1D2A6" stroke-width="1.5"/>
+<text x="62" y="548.0" font-family="Arial,Helvetica,sans-serif" font-size="16" fill="#64748B" text-anchor="start" font-weight="bold">Run everything</text>
+<rect x="340" y="524" width="878" height="36" rx="9" ry="9" fill="#FFFFFF" stroke="#F1D2A6" stroke-width="1.2"/>
+<text x="358" y="543.0" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#C05621" text-anchor="start" font-weight="bold">Amazon EKS / EC2</text>
+<text x="1204" y="543.0" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#64748B" text-anchor="end" font-weight="normal">managed compute</text>
+</svg>

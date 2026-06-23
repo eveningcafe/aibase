@@ -286,6 +286,32 @@ becomes a Pipelines step that blocks a regressed deploy.
 
 ---
 
+## Kubeflow — the open platform, on your Kubernetes
+
+![w:1120](kubeflow-architecture.svg)
+
+<!--
+The open reference. Components are usable standalone or as the full Community
+Distribution. Keep the real names: Spark Operator, Notebooks, Trainer, Katib,
+Hub. KServe is an *ecosystem* project (with Feast, Elyra), not a core component.
+Everything runs on Kubernetes — that's Layer 1.
+-->
+
+---
+
+## Amazon SageMaker — the same stages, fully managed
+
+![w:1120](sagemaker-architecture.svg)
+
+<!--
+The managed counterpart: the identical lifecycle as AWS services, no cluster to
+run. Training Jobs ≈ Trainer, Automatic Model Tuning ≈ Katib, Endpoints ≈ KServe,
+Model Registry ≈ Hub, SageMaker Pipelines ≈ Kubeflow Pipelines. Lab 2′ runs the
+fine-tune here as a Training Job from a single train.py.
+-->
+
+---
+
 ## If we built one — four forms of agency
 
 *Bostrom Ch. 10 — least → most autonomy. Maps onto how we ship LLMs today.*
