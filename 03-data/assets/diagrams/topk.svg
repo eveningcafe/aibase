@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 300" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <!-- query -> store -->
+  <rect x="14" y="118" width="86" height="44" rx="8" fill="#fff" stroke="#94a3b8"/>
+  <text x="57" y="145" text-anchor="middle" font-size="16">query</text>
+  <line x1="100" y1="140" x2="138" y2="140" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+  <ellipse cx="186" cy="124" rx="40" ry="9" fill="#dbeafe" stroke="#3b82f6"/>
+  <rect x="146" y="124" width="80" height="34" fill="#dbeafe"/>
+  <ellipse cx="186" cy="158" rx="40" ry="9" fill="#dbeafe" stroke="#3b82f6"/>
+  <path d="M146,124 v34 M226,124 v34" stroke="#3b82f6" fill="none"/>
+  <ellipse cx="186" cy="124" rx="40" ry="9" fill="none" stroke="#3b82f6"/>
+  <text x="186" y="146" text-anchor="middle" font-size="13" fill="#1e40af">store</text>
+  <line x1="226" y1="140" x2="278" y2="86" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- ranked candidates -->
+  <text x="290" y="30" font-size="13" fill="#64748b">nearest chunks, ranked by similarity</text>
+
+  <!-- kept (top-k=3) -->
+  <g font-size="14">
+    <rect x="290" y="40"  width="230" height="26" rx="5" fill="#bbf7d0" stroke="#16a34a"/><text x="300" y="58">#1   score 0.86</text>
+    <rect x="290" y="72"  width="208" height="26" rx="5" fill="#bbf7d0" stroke="#16a34a"/><text x="300" y="90">#2   score 0.84</text>
+    <rect x="290" y="104" width="192" height="26" rx="5" fill="#bbf7d0" stroke="#16a34a"/><text x="300" y="122">#3   score 0.81</text>
+  </g>
+
+  <!-- cut line -->
+  <line x1="286" y1="140" x2="548" y2="140" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="548" y="136" text-anchor="end" font-size="13" fill="#dc2626" font-weight="bold">top-k = 3  → into prompt</text>
+
+  <!-- dropped -->
+  <g font-size="14" fill="#64748b">
+    <rect x="290" y="150" width="168" height="26" rx="5" fill="#eef2f6" stroke="#cbd5e1"/><text x="300" y="168">#4   score 0.79</text>
+    <rect x="290" y="182" width="150" height="26" rx="5" fill="#eef2f6" stroke="#cbd5e1"/><text x="300" y="200">#5   score 0.77</text>
+    <rect x="290" y="214" width="132" height="26" rx="5" fill="#eef2f6" stroke="#cbd5e1"/><text x="300" y="232">#6   score 0.74</text>
+  </g>
+  <text x="466" y="200" font-size="13" fill="#94a3b8">dropped</text>
+</svg>

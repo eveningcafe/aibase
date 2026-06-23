@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 370" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <!-- lanes -->
+  <rect x="18" y="44" width="964" height="86" rx="12" fill="#eef4fb"/>
+  <rect x="18" y="250" width="964" height="86" rx="12" fill="#edfaf1"/>
+  <text x="34" y="36" font-size="17" fill="#2563eb" font-weight="bold">INDEX · offline, once</text>
+  <text x="34" y="242" font-size="17" fill="#16a34a" font-weight="bold">ANSWER · per query</text>
+
+  <!-- helper: boxes are rounded rects, 120x48 -->
+  <!-- TOP lane -->
+  <g font-size="17" text-anchor="middle">
+    <rect x="60"  y="63" width="120" height="48" rx="8" fill="#fff" stroke="#94a3b8"/><text x="120" y="92">Sources</text>
+    <rect x="240" y="63" width="120" height="48" rx="8" fill="#fff" stroke="#94a3b8"/><text x="300" y="92">Chunk</text>
+    <rect x="420" y="63" width="120" height="48" rx="8" fill="#fff" stroke="#94a3b8"/><text x="480" y="92">Embed</text>
+  </g>
+  <line x1="180" y1="87" x2="236" y2="87" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="360" y1="87" x2="416" y2="87" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- vector store cylinder -->
+  <g>
+    <ellipse cx="480" cy="156" rx="58" ry="13" fill="#fcd34d"/>
+    <rect x="422" y="156" width="116" height="44" fill="#fcd34d"/>
+    <ellipse cx="480" cy="200" rx="58" ry="13" fill="#fcd34d"/>
+    <path d="M422,156 v44 M538,156 v44" stroke="#d97706" fill="none" stroke-width="1.5"/>
+    <ellipse cx="480" cy="156" rx="58" ry="13" fill="none" stroke="#d97706" stroke-width="1.5"/>
+    <text x="480" y="184" text-anchor="middle" font-size="15" font-weight="bold" fill="#7c4a03">Vector store</text>
+  </g>
+  <!-- embed(top) -> store : write -->
+  <line x1="480" y1="111" x2="480" y2="142" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="492" y="132" font-size="13" fill="#64748b">write</text>
+
+  <!-- BOTTOM lane -->
+  <g font-size="17" text-anchor="middle">
+    <rect x="60"  y="269" width="120" height="48" rx="8" fill="#fff" stroke="#94a3b8"/><text x="120" y="298">Query</text>
+    <rect x="240" y="269" width="120" height="48" rx="8" fill="#fff" stroke="#94a3b8"/><text x="300" y="298">Embed</text>
+    <rect x="620" y="269" width="120" height="48" rx="8" fill="#fff" stroke="#94a3b8"/><text x="680" y="298">LLM</text>
+    <rect x="800" y="269" width="140" height="48" rx="8" fill="#dcfce7" stroke="#16a34a"/><text x="870" y="298">Answer + cite</text>
+  </g>
+  <line x1="180" y1="293" x2="236" y2="293" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="740" y1="293" x2="796" y2="293" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- embed(bottom) -> store : search -->
+  <path d="M362,290 C420,285 410,235 442,205" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="372" y="248" font-size="13" fill="#64748b">search</text>
+  <!-- store -> LLM : top-k chunks -->
+  <path d="M538,188 C595,205 585,275 616,290" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="560" y="250" font-size="13" fill="#64748b">top-k chunks</text>
+
+  <!-- same-embedder teaching note -->
+  <text x="300" y="345" text-anchor="middle" font-size="13" fill="#94a3b8" font-style="italic">same embedder as INDEX ↑</text>
+</svg>

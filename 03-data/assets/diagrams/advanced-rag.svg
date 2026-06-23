@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 320" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="r" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <!-- query -->
+  <rect x="14" y="138" width="86" height="46" rx="8" fill="#fff" stroke="#94a3b8"/>
+  <text x="57" y="166" text-anchor="middle" font-size="16">query</text>
+  <line x1="100" y1="161" x2="126" y2="161" stroke="#475569" stroke-width="2" marker-end="url(#r)"/>
+
+  <!-- (1) rewrite -->
+  <rect x="128" y="138" width="126" height="46" rx="8" fill="#fde68a" stroke="#d97706"/>
+  <text x="191" y="160" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#7c4a03">① Rewrite</text>
+  <text x="191" y="177" text-anchor="middle" font-size="12.5" fill="#7c4a03">expand intent</text>
+
+  <!-- (2) hybrid wrapper -->
+  <rect x="270" y="92" width="158" height="138" rx="10" fill="none" stroke="#d97706" stroke-dasharray="6 4"/>
+  <text x="349" y="86" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#b45309">② Hybrid</text>
+  <rect x="284" y="104" width="130" height="44" rx="8" fill="#fff" stroke="#94a3b8"/>
+  <text x="349" y="131" text-anchor="middle" font-size="14">Vector (dense)</text>
+  <rect x="284" y="174" width="130" height="44" rx="8" fill="#fff" stroke="#94a3b8"/>
+  <text x="349" y="201" text-anchor="middle" font-size="14">BM25 (keyword)</text>
+  <!-- rewrite -> both -->
+  <path d="M254,155 C268,140 270,128 282,126" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#r)"/>
+  <path d="M254,167 C268,182 270,194 282,196" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#r)"/>
+
+  <!-- vector store -->
+  <ellipse cx="520" cy="140" rx="46" ry="11" fill="#dbeafe" stroke="#3b82f6"/>
+  <rect x="474" y="140" width="92" height="42" fill="#dbeafe"/>
+  <ellipse cx="520" cy="182" rx="46" ry="11" fill="#dbeafe" stroke="#3b82f6"/>
+  <path d="M474,140 v42 M566,140 v42" stroke="#3b82f6" fill="none"/>
+  <ellipse cx="520" cy="140" rx="46" ry="11" fill="none" stroke="#3b82f6"/>
+  <text x="520" y="166" text-anchor="middle" font-size="13.5" fill="#1e40af">store</text>
+  <!-- both -> store -->
+  <line x1="414" y1="126" x2="476" y2="150" stroke="#475569" stroke-width="2" marker-end="url(#r)"/>
+  <line x1="414" y1="196" x2="476" y2="172" stroke="#475569" stroke-width="2" marker-end="url(#r)"/>
+  <!-- (4) metadata filter tag -->
+  <rect x="452" y="232" width="136" height="28" rx="6" fill="#fde68a" stroke="#d97706"/>
+  <text x="520" y="251" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#7c4a03">④ filter: source·ACL·date</text>
+  <line x1="520" y1="193" x2="520" y2="230" stroke="#d97706" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <!-- store -> rerank -->
+  <line x1="566" y1="161" x2="612" y2="161" stroke="#475569" stroke-width="2" marker-end="url(#r)"/>
+  <text x="589" y="152" text-anchor="middle" font-size="12.5" fill="#64748b">top-30</text>
+
+  <!-- (3) rerank -->
+  <rect x="614" y="138" width="170" height="46" rx="8" fill="#fde68a" stroke="#d97706"/>
+  <text x="699" y="160" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#7c4a03">③ Rerank</text>
+  <text x="699" y="177" text-anchor="middle" font-size="12.5" fill="#7c4a03">cross-encoder</text>
+
+  <!-- rerank -> LLM -->
+  <line x1="784" y1="161" x2="828" y2="161" stroke="#475569" stroke-width="2" marker-end="url(#r)"/>
+  <text x="806" y="152" text-anchor="middle" font-size="12.5" fill="#64748b">top-5</text>
+
+  <!-- LLM -->
+  <rect x="830" y="138" width="116" height="46" rx="8" fill="#fff" stroke="#94a3b8"/>
+  <text x="888" y="166" text-anchor="middle" font-size="14.5">prompt → LLM</text>
+  <line x1="946" y1="161" x2="972" y2="161" stroke="#475569" stroke-width="2" marker-end="url(#r)"/>
+
+  <!-- answer -->
+  <rect x="974" y="138" width="118" height="46" rx="8" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="1033" y="159" text-anchor="middle" font-size="13.5">answer +</text>
+  <text x="1033" y="176" text-anchor="middle" font-size="13.5">citation</text>
+</svg>
