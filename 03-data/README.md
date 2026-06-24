@@ -73,12 +73,15 @@ and the shape decides how much pipeline work you do before it is usable.
 | **Semi-structured** | Markdown, HTML, JSON, CSV, tables | Medium — structure-aware splitting |
 | **Structured** | SQL databases, APIs, spreadsheets | Low for the data; you often query it directly instead of embedding |
 
-In reality data look messy:
+In reality the data is messy. Real-world PDFs bury knowledge in tables,
+flowcharts, and architecture diagrams that a naïve text extractor flattens into
+gibberish — most of the "parse, clean, chunk" cost above is spent fighting this.
+A few examples pulled from real security / cloud docs:
 
-![messy table](assets/messy-data/messy-table_NIST-800-190-controls-mapping-p55.png)
-![incident-response flowchart](assets/messy-data/incident-response-flowchart_CISA-playbooks-p6-06.png)
-![data-pipeline architecture](assets/messy-data/data-pipeline-architecture_AWS-analytics-lens-p110.png)
-![k8s container architecture](assets/messy-data/k8s-container-vs-vm-architecture_NIST-800-190-p17.png)
+- [Controls-mapping table — NIST 800-190, p55](assets/messy-data/messy-table_NIST-800-190-controls-mapping-p55.png)
+- [Incident-response flowchart — CISA playbooks, p6](assets/messy-data/incident-response-flowchart_CISA-playbooks-p6-06.png)
+- [Data-pipeline architecture — AWS analytics lens, p110](assets/messy-data/data-pipeline-architecture_AWS-analytics-lens-p110.png)
+- [Container-vs-VM architecture — NIST 800-190, p17](assets/messy-data/k8s-container-vs-vm-architecture_NIST-800-190-p17.png)
 
 ---
 
@@ -202,28 +205,53 @@ reranking, query rewriting, agentic RAG — is Chapter 2.)
 ## Phase 7 · Evaluation
 
 "The demo answered well" is not evidence — the same trap as the Models layer. RAG
-has **two** things to measure, because it has two stages that can each fail:
+fails in **two independent places**, so you measure — and debug — each separately:
 
-| Stage | Question | Metrics |
-|-------|----------|---------|
-| **Retrieval** | did we fetch the right chunks? | recall@k, precision@k, MRR, hit-rate |
-| **Generation** | did the answer use them faithfully? | faithfulness (no hallucination), answer relevance, correctness |
+| Stage | Question it answers |
+|-------|---------------------|
+| **① Retrieval** | did we fetch the right chunks? |
+| **② Generation** | did the answer use them faithfully? |
 
-The killer failure mode is **hallucination** — a fluent answer not supported by
-the retrieved context. **Faithfulness** measures exactly that: is every claim in
-the answer grounded in a chunk? Frameworks like **RAGAS** score faithfulness,
-answer relevance, and context recall/precision, often using an LLM-as-judge.
+**Diagnose by stage.** One question splits every failure: *was the correct chunk in
+the context?*
 
-Diagnose failures by stage:
+- ✅ chunk **was** retrieved but the answer is wrong → a **generation** problem
+  (prompt, model, or context too noisy).
+- ❌ chunk was **never** retrieved → a **retrieval** problem (chunking, embedding,
+  top-k, or add a reranker).
 
-- Wrong/empty answer but the right chunk *was* retrieved → a **generation**
-  problem (prompt, model, or context too noisy).
-- Right answer impossible because the chunk *wasn't* retrieved → a **retrieval**
-  problem (chunking, embedding, top-k, or you need a reranker).
+### Retrieval metrics — *did we fetch the right chunks?*
 
-Knobs to sweep against a held-out question set: chunk size, overlap, top-k,
-hybrid on/off, reranker on/off, embedding model. Report quality **with** latency
-and cost — never a single number.
+Scored against a **gold set**: each question is tagged by hand with the chunk/doc that
+is truly relevant — *not* the chunks the system itself returned, which would be circular.
+
+| Metric | What it asks | Intuition |
+|--------|--------------|-----------|
+| **recall@k** | of *all* relevant chunks, how many made the top-k? | did we **miss** anything? |
+| **precision@k** | of the *k* fetched, how many are relevant? | how much **noise** did we pull in? |
+| **MRR / hit-rate** | how high did the first relevant chunk rank? | is the right chunk near the top? |
+
+*Example:* top-k = 5, and 2 of the 3 relevant chunks land in it → **recall@5 = 2/3 ≈ 0.67**;
+if only those 2 of the 5 are relevant → **precision@5 = 2/5 = 0.4**. Raising top-k helps
+recall but hurts precision. Lab 2 measures this on 40 hand-written questions mapped to a gold doc.
+
+### Generation metrics & hallucination
+
+The killer failure mode is **hallucination** — a fluent, confident answer **not supported
+by the retrieved context** — dangerous because it looks *identical* to a correct one.
+
+| Metric | What it asks |
+|--------|--------------|
+| **faithfulness** | is **every claim** in the answer grounded in a chunk? *(this is what catches hallucination)* |
+| **answer relevance** | does the answer actually address the question asked? |
+
+**RAGAS** scores these automatically with an **LLM-as-judge** — a second LLM reads
+*question + context + answer* and grades it, so you evaluate hundreds of cases without
+hand-reading each (spot-check the judge; it can err too).
+
+Knobs to sweep against a held-out question set: chunk size, overlap, top-k, hybrid
+on/off, reranker on/off, embedding model. Report quality **with latency and cost** —
+never a single number.
 
 ---
 
