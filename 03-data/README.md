@@ -62,31 +62,6 @@ Useful, but naïve: similarity-only, fixed top-k, trusts the user's phrasing —
 Chapter 2 closes. Phases 1–6 below detail each piece; [Lab 1](#labs-run-on-a-free-kaggle-gpu)
 builds it end-to-end.
 
----
-
-
-### RAG vs long context 
-
-| Dimension | Long context — stuff the window | RAG — retrieve first |
-|-----------|---------------------------------|----------------------|
-| **Infrastructure** | the "no-stack stack" — no DB, embedder, reranker, or sync to keep | heavy: chunking + embedder + vector DB + reranker + keeping vectors in sync |
-| **Retrieval reliability** | no retrieval step — the model sees everything | semantic search is probabilistic → **silent failure**: the answer was there, retrieval just didn't return it |
-| **Cross-doc / global reasoning** | sees full documents → can spot what's *missing* (e.g. "which requirements were omitted from the release?") | only isolated snippets → can't reason over the *gap between* documents |
-| **Cost per query** | reprocesses every token on **every** call (a 500-pg manual ≈ 250k tokens each time) | pays the processing cost **once at index time**; fetches a few chunks per query |
-| **Accuracy at scale** | attention dilutes — a needle buried in a huge context is missed or hallucinated | top-k (say 5 chunks) removes the haystack → the model focuses on signal |
-| **Data ceiling** | ~1M tokens is a drop against enterprise data lakes (TB–PB) | a retrieval layer filters an effectively infinite corpus down to what fits |
-
-The decision rule that falls out:
-
-- **Bounded data + global reasoning** — one legal contract, a single book to
-  summarize → **long context** wins (simpler stack, sees the whole picture).
-- **Fresh, private, or effectively infinite knowledge** — an enterprise corpus →
-  **RAG** remains the only viable warehouse.
-
-Caveat on the cost line: **prompt caching** offsets long context for *static* data,
-but a *dynamic* corpus pays the full token tax on every request.
-
-
 ## Phase 1 · Sources
 
 The raw knowledge you want the model to use. It arrives in three broad shapes,
@@ -224,34 +199,6 @@ reranking, query rewriting, agentic RAG — is Chapter 2.)
 
 ---
 
-## Chapter 2 · The advanced pipeline
-
-Chapter 1 works, but it's naïve. Four levers make retrieval *good* — each closes a
-gap it left open:
-
-```
-ANSWER (advanced)
-  query → rewrite / expand intent
-        → hybrid: vector ∪ BM25  ──filter by tag──► ⛁ → top-30
-        → rerank (cross-encoder) → top-5 → prompt → model → answer + citation
-```
-
-- **Hybrid search** — dense vectors nail meaning but miss exact terms (error codes,
-  flags, rare names); fuse them with keyword **BM25** to get both.
-- **Reranking** — over-fetch a cheap top-30, then a **cross-encoder** rescores
-  query+chunk *together* and keeps the best 3–5. Biggest lever after chunking.
-- **Query understanding** — don't trust the user's phrasing: **rewrite/expand** it,
-  **multi-query** (union several rephrasings), or **HyDE** (embed a drafted answer).
-- **Metadata filtering** — the `source · ACL · date` tags from Phase 2 restrict the
-  search (this tenant, since 2026) and enforce permissions.
-
-
-
-[Lab 2](#labs-run-on-a-free-kaggle-gpu) runs all of this over the real k8s docs and
-measures the levers on an independent eval set.
-
----
-
 ## Phase 7 · Evaluation
 
 "The demo answered well" is not evidence — the same trap as the Models layer. RAG
@@ -280,11 +227,34 @@ and cost — never a single number.
 
 ---
 
-## Chapter 3 · Frameworks & the fleet
+## Chapter 2 · RAG in production
 
-Chapters 1–2 built the pipeline **by hand** so every phase is visible. The real world
-changes two things: you don't hand-write it (a **framework** does), and you don't run
-*one* of them (you run *many*). This chapter is that zoom-out.
+### The advanced pipeline
+
+
+Measure first (Phase 7), then pull the levers. Chapter 1 works, but it's naïve.
+Four levers make retrieval *good* — each closes a gap it left open:
+
+```
+ANSWER (advanced)
+  query → rewrite / expand intent
+        → hybrid: vector ∪ BM25  ──filter by tag──► ⛁ → top-30
+        → rerank (cross-encoder) → top-5 → prompt → model → answer + citation
+```
+
+- **Hybrid search** — dense vectors nail meaning but miss exact terms (error codes,
+  flags, rare names); fuse them with keyword **BM25** to get both.
+- **Reranking** — over-fetch a cheap top-30, then a **cross-encoder** rescores
+  query+chunk *together* and keeps the best 3–5. Biggest lever after chunking.
+- **Query understanding** — don't trust the user's phrasing: **rewrite/expand** it,
+  **multi-query** (union several rephrasings), or **HyDE** (embed a drafted answer).
+- **Metadata filtering** — the `source · ACL · date` tags from Phase 2 restrict the
+  search (this tenant, since 2026) and enforce permissions.
+
+[Lab 2](#labs-run-on-a-free-kaggle-gpu) runs all of this over the real k8s docs and
+measures the levers on an independent eval set.
+
+---
 
 ### Frameworks · LangChain in one minute
 
@@ -312,7 +282,31 @@ Learn the phases by hand and LangChain is just learning which method wraps each 
 proven in [`labs/lab1-langchain/`](labs/lab1-langchain/): Lab 1 rebuilt
 component-for-component, same numbers out.
 
-### The fleet · from N notebooks to one platform
+### RAG vs long context — why not just stuff the window?
+
+With the pipeline built and productized, the honest question: why retrieve at all,
+rather than dump everything into a long context window?
+
+| Dimension | Long context — stuff the window | RAG — retrieve first |
+|-----------|---------------------------------|----------------------|
+| **Infrastructure** | the "no-stack stack" — no DB, embedder, reranker, or sync to keep | heavy: chunking + embedder + vector DB + reranker + keeping vectors in sync |
+| **Retrieval reliability** | no retrieval step — the model sees everything | semantic search is probabilistic → **silent failure**: the answer was there, retrieval just didn't return it |
+| **Cross-doc / global reasoning** | sees full documents → can spot what's *missing* (e.g. "which requirements were omitted from the release?") | only isolated snippets → can't reason over the *gap between* documents |
+| **Cost per query** | reprocesses every token on **every** call (a 500-pg manual ≈ 250k tokens each time) | pays the processing cost **once at index time**; fetches a few chunks per query |
+| **Accuracy at scale** | attention dilutes — a needle buried in a huge context is missed or hallucinated | top-k (say 5 chunks) removes the haystack → the model focuses on signal |
+| **Data ceiling** | ~1M tokens is a drop against enterprise data lakes (TB–PB) | a retrieval layer filters an effectively infinite corpus down to what fits |
+
+The decision rule that falls out:
+
+- **Bounded data + global reasoning** — one legal contract, a single book to
+  summarize → **long context** wins (simpler stack, sees the whole picture).
+- **Fresh, private, or effectively infinite knowledge** — an enterprise corpus →
+  **RAG** remains the only viable warehouse.
+
+Caveat on the cost line: **prompt caching** offsets long context for *static* data,
+but a *dynamic* corpus pays the full token tax on every request.
+
+### The platform
 
 The bigger shift is operational. You stop maintaining *N notebooks* and start running
 **one platform that many RAG apps plug into**. The app code (LangChain/LlamaIndex)
@@ -339,12 +333,12 @@ per-app config**:
   (quota + cost per app), orchestrated ingestion, and an **eval gate in CI** (a change
   that drops hit@k / faithfulness fails the build, like a red test).
 
-The day-2 concerns scale with the fleet and get attributed per app: **freshness**
-(re-index on change or nightly — stale chunks answer confidently wrong), **cost**
-(embeddings + storage + retrieval + the extra prompt tokens RAG adds), **governance**
-(PII, ACL enforced *at retrieval*, right-to-delete — the vectors must go too, a copy
-left behind is still a leak), and **silent retrieval failures** (the answer was there,
-retrieval just missed it — only monitoring + continuous eval catch it).
+The day-2 concerns scale with the fleet, each attributed per app:
+
+- **Freshness** — *how to stop chunks going stale?* Re-index on change or nightly; a stale chunk answers confidently wrong.
+- **Cost** — *how to keep spend in check?* Embeddings + storage + retrieval + the extra prompt tokens RAG adds.
+- **Governance** — *how to enforce PII/ACL and right-to-delete?* ACL *at retrieval*; on delete the vectors must go too — a copy left behind is still a leak.
+- **Silent retrieval failures** — *how to catch an answer that was there but never retrieved?* Only monitoring + continuous eval do.
 
 **One-liner:** *you don't write RAG, you operate a platform; each app is config on
 top.* That is **data-ops at fleet scale** — the job the ops/deploy layer builds.

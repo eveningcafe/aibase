@@ -30,9 +30,9 @@ slides of concept per phase, then the notebook.
 
 ## Agenda
 
-1. **Why this layer** — knowledge vs behaviour, and RAG vs long context
+1. **Why this layer** — knowledge vs behaviour (RAG vs fine-tune)
 2. **The pipeline** — sources → chunk → embed → store → retrieve → answer → **evaluate** *(Phases 1–7)*
-3. **RAG on production** — the advanced pipeline · **LangChain** · the **RAG platform**
+3. **RAG on production** — the advanced pipeline · **LangChain** · RAG vs long context · the **RAG platform**
 4. **Labs** — build simple + advanced RAG on a free Kaggle **T4**
 
 <!--
@@ -79,27 +79,6 @@ Each era fixed the blind spot of the one before. Keyword still powers the web, b
 burden was on the user to guess the exact words. The plot is the whole idea of embeddings:
 coffee/espresso cluster, house is far — distance = (dis)similarity. Semantic search at
 scale IS the RAG pipeline (next).
--->
-
----
-
-## RAG vs long context — why not just stuff the window?
-
-| Dimension | Long context | RAG |
-|-----------|--------------|-----|
-| **Infrastructure** | none — "no-stack stack" | heavy: chunk + embed + vector DB + sync |
-| **Reliability** | model sees everything | probabilistic → **silent failure** |
-| **Cost / query** | reprocesses every token, every call | pays once at index time |
-| **Data ceiling** | ~1M tokens | effectively infinite corpus |
-
-- **Bounded data + global reasoning** (one contract, one book) → **long context**.
-- **Fresh / private / huge** (an enterprise corpus) → **RAG**.
-
-<!--
-Why retrieve at all, rather than dump everything in the window? This motivates the pipeline
-that follows. Not either/or — prompt caching offsets long context for *static* data, but a
-*dynamic* corpus pays the full token tax every request. Long context can reason over the
-*gap between* documents; RAG only sees isolated snippets.
 -->
 
 ---
@@ -352,6 +331,27 @@ Client-side orchestration; **eval + ops live outside the chain.** Proven in `lab
 <!--
 Learn the phases by hand and LangChain is just learning which method wraps each. There's
 no "submit a job to their cloud" — running on managed infra is a deploy step, not the chain.
+-->
+
+---
+
+## RAG vs long context — why not just stuff the window?
+
+| Dimension | Long context | RAG |
+|-----------|--------------|-----|
+| **Infrastructure** | none — "no-stack stack" | heavy: chunk + embed + vector DB + sync |
+| **Reliability** | model sees everything | probabilistic → **silent failure** |
+| **Cost / query** | reprocesses every token, every call | pays once at index time |
+| **Data ceiling** | ~1M tokens | effectively infinite corpus |
+
+- **Bounded data + global reasoning** (one contract, one book) → **long context**.
+- **Fresh / private / huge** (an enterprise corpus) → **RAG**.
+
+<!--
+With the pipeline built and productized, the honest question: why retrieve at all, rather
+than dump everything in the window? Not either/or — prompt caching offsets long context for
+*static* data, but a *dynamic* corpus pays the full token tax every request. Long context can
+reason over the *gap between* documents; RAG only sees isolated snippets.
 -->
 
 ---
