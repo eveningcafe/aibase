@@ -136,10 +136,10 @@ prompt ──▶ [blurts an answer immediately] ──▶ "Try restarting the po
 
 REASONING MODEL:
 prompt ──▶ [emits a PILE of "thinking" tokens first] ──▶ then concludes
-           ┌───────────────────── scratchpad ──────────────────────┐
-           │ "5xx rising since 14:32. What changed near then?       │
-           │  → deploy v2.3 at 14:30. Suspect the deploy. Logs say  │
-           │  'DB connection timeout'. Did v2.3 change pool size?   │
+           ┌───────────────────── scratchpad ────────────────────────┐
+           │ "5xx rising since 14:32. What changed near then?        │
+           │  → deploy v2.3 at 14:30. Suspect the deploy. Logs say   │
+           │  'DB connection timeout'. Did v2.3 change pool size?    │
            │  → yes, pool dropped to 5. So the cause is deploy v2.3, │
            │  NOT a traffic surge."                                  │
            └─────────────────────────────────────────────────────────┘

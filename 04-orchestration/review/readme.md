@@ -48,7 +48,7 @@ Mẫu cơ bản nhất của review là **vòng tự chấm**: cùng một model
 thứ hai) đọc lại đầu ra của chính nó, chỉ ra lỗi, rồi sửa — lặp đến khi đạt.
 
 ```
-        ┌──────────────────────────────────────────────┐
+        ┌───────────────────────────────────────────────┐
         │                                               │
         ▼                                               │ chưa đạt → sửa
   ① SINH (generate)                                     │

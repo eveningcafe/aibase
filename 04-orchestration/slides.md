@@ -118,7 +118,7 @@ deterministic with agentic judgment at the hard joints. The next slide makes the
 ```
 plan ──▶ execute (tools) ──▶ review ──▶ (loop)
    ▲                                        │
-   └──────────── memory / state ◀───────────┘
+   └──────────── memory / state ◀──────────┘
 ```
 
 | Box | Role | We'll cover |
@@ -404,13 +404,18 @@ perfectly: every tool, human or code, is the same protocol.
 
 # 2 · Execution
 
-Calling tools, and MCP.
+The agent acts — the client runs its tool calls.
 
 <!--
-30 minutes — the longest part. Goal: a precise mental model of MCP — the four
-roles, the message flow, tool vs resource, when the tool list loads, and local
-vs remote. This is the most hyped, fastest-moving piece of the stack, so
-precision matters.
+30 minutes — the longest part. Frame first: execution is the ACTION box —
+turning a decision into a real effect. The model never acts itself; it only
+emits a tool call (an intent). Some CLIENT then executes it — and there are
+several ways to do that: a native function-calling loop, a CLI/shell command,
+a direct API/SDK call, or MCP. MCP is just ONE method — we focus on it because
+it's the open STANDARD that makes a tool reusable across apps, not because it's
+the only way. Keep that framing so students don't conflate "execution" with
+"MCP". Then build the precise MCP mental model: four roles, message flow, tool
+vs resource, when the tool list loads, local vs remote.
 -->
 
 ---
@@ -449,7 +454,7 @@ through exactly this.
 │      ├── Client A ──MCP──▶ Server: file-notes ──▶ file  │
 │      ├── Client B ──MCP──▶ Server: grafana    ──▶ API   │
 │      └── Client C ──MCP──▶ Server: github     ──▶ API   │
-└──────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────┘
 ```
 
 - **Model** — cloud inference; never touches a server directly.
@@ -466,28 +471,31 @@ Host↔server (MCP).
 
 ---
 
-## The flow — creating a note
+## The flow — rolling back the bad deploy
 
 ```
-1. User: "create a note 'Project meeting', content: lock the deadline"
+1. Decision (from planning): roll back checkout-api to v2.2
         ▼
-2. MODEL picks tool create_note {title:"Project meeting", content:"lock the deadline"}
+2. MODEL picks tool  rollback_deployment {service:"checkout-api", to_version:"v2.2"}
         ▼
-3. CLIENT → SERVER:  tools/call create_note {...}
+3. CLIENT → SERVER:  tools/call rollback_deployment {...}
         ▼
-4. SERVER writes the .md, returns "Created note: project-meeting.md"
+4. SERVER (deploy MCP) hits the deploy API, returns "Rolled back to v2.2 (deploy #4821)"
         ▼
 5. CLIENT hands the result back to the MODEL
         ▼
-6. MODEL replies: "Created the note 'Project meeting' 👍"
+6. MODEL continues: "Rolled back to v2.2 — now verifying 5xx…"  → review
 ```
 
-**model wants → client calls → server does → result back → model replies.**
+**model wants → client calls → server does → result back → model continues.**
 
 <!--
-The canonical round trip. Memorize the one-liner at the bottom. Note step 2 vs
-3: the model emits an *intent*; the client is what actually speaks MCP. That
-separation is why one server serves many models — next slide.
+The canonical round trip, on our incident: the rollback the SRE approved in
+planning. Memorize the one-liner at the bottom. Note step 2 vs 3: the model
+emits an *intent* (rollback_deployment); the client is what actually speaks MCP
+to the deploy server. That separation is why one server serves many models —
+next slide. Step 6 doesn't end the story — it hands off to review (did the 5xx
+actually clear?), which is part 3.
 -->
 
 ---
@@ -496,16 +504,16 @@ separation is why one server serves many models — next slide.
 
 ```jsonc
 // ① Model emits (its own format)
-{ "type": "tool_use", "name": "create_note",
-  "input": { "title": "Project meeting", "content": "lock the deadline" } }
+{ "type": "tool_use", "name": "rollback_deployment",
+  "input": { "service": "checkout-api", "to_version": "v2.2" } }
 
 // ② Client translates to an MCP message to the server
 { "jsonrpc": "2.0", "id": 2, "method": "tools/call",
-  "params": { "name": "create_note", "arguments": { ... } } }
+  "params": { "name": "rollback_deployment", "arguments": { ... } } }
 
 // ③ Server returns
 { "jsonrpc": "2.0", "id": 2,
-  "result": { "content": [ { "type": "text", "text": "Created: project-meeting.md" } ] } }
+  "result": { "content": [ { "type": "text", "text": "Rolled back to v2.2 (deploy #4821)" } ] } }
 ```
 
 The model **never writes JSON-RPC.** The client always normalizes to MCP → the
@@ -549,51 +557,6 @@ engineering hiding in your function signatures.
 
 ---
 
-## Tool or Resource?
-
-| What you need | Use | Server returns |
-|---|---|---|
-| Create a note (write to disk) | tool `create_note` | "Created..." |
-| Read an existing note for Claude | resource `note://...` | the note's contents |
-
-**tool = do work · resource = read data**
-
-(Servers also offer **prompts** — pre-written command templates, e.g.
-`summarize_notes`.)
-
-<!--
-Quick but real distinction. Tools have side effects / do actions; resources are
-read-only like an HTTP GET. Many beginners model everything as tools — resources
-are how you expose data the model can pull on demand.
--->
-
----
-
-## When is the tool list loaded? (init)
-
-**Once**, at connection open — not per message.
-
-```
-CLIENT                                  SERVER
-  │ ① initialize  ───────────────────▶ │  handshake, versions
-  │ ◀── "I have tools/resources" ────── │
-  │ ② initialized (notify) ──────────▶  │
-  │ ③ tools/list  ───────────────────▶  │  ◀── loaded HERE, then CACHED
-  │ ◀── [create_note, read_note, ...] ─ │
-  ════════ connection ready ════════
-```
-
-Each chat turn reuses the **cached** list. Reload only on reconnect or
-`notifications/tools/list_changed`.
-
-<!--
-Why this matters: the tool list costs context tokens on every turn. It's cached,
-not re-fetched, but it IS re-injected each turn — so a server exposing 200 tools
-bloats every prompt. Keep servers focused; expose only the tools an agent needs.
--->
-
----
-
 ## Local or Remote? — two independent axes
 
 | Kind | Where the server runs | Client connects via |
@@ -604,8 +567,9 @@ bloats every prompt. Keep servers focused; expose only the tools an agent needs.
 1. *Where does the server **run**?* local vs remote
 2. *Where does the server **get data**?* local file vs remote API
 
-> `file-notes` = local server + local files. Grafana MCP = local server calling a
-> **remote API** — or a remote server hosted by Grafana.
+> Kubernetes MCP = **local** server (npx) talking to a **remote** cluster API.
+> Grafana MCP = local server calling a **remote** Grafana — or a remote server
+> Grafana hosts for you.
 
 <!--
 Don't conflate the two axes. A server can run locally yet reach across the
@@ -616,28 +580,35 @@ image; it reasons over text. Important expectation-setting for ops use.
 
 ---
 
-## The working example — `file-notes`
+## The working example — plug in Grafana + Kubernetes MCP
 
-A Python MCP server: create/read/update/delete/search Markdown notes + file ops
-inside a **sandbox**.
-
-- **Tools** — `create_note`, `read_note`, `list_notes`, `update_note`,
-  `delete_note`, `search_notes`, `list_files`, `read_file`, `write_file`,
-  `file_info`
-- **Resources** — `note://{name}`, `notes://index`
-- **Prompts** — `summarize_notes`
-- 🔒 every path through `_safe_path()` → can't escape `data/`
+Our SRE agent needs **eyes** (metrics/logs) and **hands** (the cluster). Don't
+build a server — **install** existing ones:
 
 ```bash
-mcp dev server.py     # MCP Inspector — click through each tool
-claude mcp add file-notes -- /path/.venv/bin/python /path/server.py
+# Grafana MCP — metrics & logs  → investigate (plan) + verify (review)
+claude mcp add grafana \
+  --env GRAFANA_URL=https://grafana.internal \
+  --env GRAFANA_API_KEY=$GRAFANA_TOKEN \
+  -- docker run -i --rm mcp/grafana
+
+# Kubernetes MCP — inspect & roll back deployments  → act (execute)
+claude mcp add kubernetes -- npx -y mcp-server-kubernetes
+
+claude mcp list        # confirm both are connected
 ```
 
+- **Grafana MCP** → query Prometheus/Loki → the **5xx signal** for *plan* & *review*
+- **Kubernetes MCP** → get pods, roll out / undo a deployment → the *execute* step
+
 <!--
-If there's a live machine, demo it here: open the Inspector, call create_note,
-show the file appear, read it back as a resource. The sandbox point matters —
-_safe_path is the first taste of "tool calls are real actions; constrain them" —
-the model can ask for anything, so the server is where you draw the boundary.
+The whole point of MCP lands here: you usually DON'T write a server, you install
+ones that exist. With just these two, our SRE agent can run the entire incident —
+Grafana gives it eyes (is 5xx really up? did it clear?), Kubernetes gives it hands
+(roll back the bad deploy). Tool names come from the servers themselves (tools/list).
+Caveat to stress: the k8s server points at your real kubeconfig context — these are
+REAL actions on a REAL cluster. That's exactly why stop-and-ask (part 1) and grounded
+review (part 3) matter. Commands are illustrative — creds/cluster/Docker required.
 -->
 
 ---
@@ -649,7 +620,7 @@ the model can ask for anything, so the server is where you draw the boundary.
   server) · **Server** (tools/resources/prompts).
 - Model emits *intent* → **client translates** to JSON-RPC → server sees one
   format.
-- **tool = do · resource = read** · tool list loaded **once** + cached.
+- You usually **install** existing servers (Grafana, Kubernetes) — reuse, not rewrite.
 - "Where it runs" ⟂ "where the data is."
 
 <!--
@@ -695,33 +666,6 @@ NO review                       WITH review
 <!--
 The motivating failure. An agent that trusts its own "done" is dangerous on a
 prod system. This slide justifies the entire box: confidence is not correctness.
--->
-
----
-
-## The Reflection pattern — generate → critique → fix
-
-```
-        ┌──────────────────────────────────────┐
-        ▼                                       │ not good → fix
-  ① GENERATE  (produce answer / action)         │
-        │                                       │
-        ▼                                       │
-  ② CRITIQUE  ──"errors? missing? wrong?"───────┘
-        │
-        ▼  good
-  ③ FINALIZE
-```
-
-**Critiquing is easier than generating.** "Write a perfect report" is hard;
-"here's a draft, find 3 weak spots" is easy. Splitting the roles gives two angles
-on one problem.
-
-<!--
-Connect to part 1: reasoning = draft BEFORE answering; reflection = re-read
-AFTER answering and rewrite. Same trade — spend tokens to buy correctness — just
-applied to the first draft. The "critique is easier than generation" asymmetry is
-why this works at all.
 -->
 
 ---
@@ -823,8 +767,6 @@ loop folds back on itself.
 ## Review — remember
 
 - Output is **fluent ≠ correct** → doubt it before finalizing.
-- **Reflection** = generate → critique → fix; *critiquing is easier than
-  generating.*
 - **Self-critique** (own reasoning, can be confidently wrong) vs **grounded
   verification** (anchored to truth). Re-measure 5xx, don't self-certify.
 - Reviewer: **self / judge model / hard checks** — machine-checkable → don't
@@ -841,8 +783,6 @@ improve across loops and sessions instead of starting from zero each time.
 <!-- _class: part -->
 
 # 4 · Memory
-
-The four kinds every agent needs.
 
 <!--
 25 minutes. Source: Martin Keen's "Four Types of Memory" + mem0. Goal: the four
@@ -879,28 +819,23 @@ how humans remember.
 ## The four types
 
 ```
-                         AGENT MEMORY
-        ┌──────────────────────┴───────────────────────┐
-        ▼                                               ▼
-  SHORT-TERM (working)                        LONG-TERM
-  "thinking right now"          ┌──────────┬──────────┬───────────┐
-                                ▼          ▼          ▼
-                            Episodic    Semantic   Procedural
-                           "happened"   "facts"    "how-to"
+  AGENT MEMORY
+  │
+  ├─ SHORT-TERM ── Working      "thinking right now" — context window (RAM)
+  │
+  └─ LONG-TERM ─┬─ Episodic     "what happened"      — a diary
+                ├─ Semantic     "facts"              — knowledge, grounding
+                └─ Procedural   "how-to"             — skills, the rules
 ```
 
-**working = RAM now · episodic = diary · semantic = knowledge · procedural =
-skills**
-
 <!--
-The mnemonic at the bottom is what they should walk out remembering. Working is
-short-term; the other three are long-term and split by what they hold: events,
-facts, skills. Next four micro-slides, one each.
+Working is short-term; the other three are long-term and split by what they
+hold: events, facts, skills. Next four micro-slides, one each.
 -->
 
 ---
 
-## 1 · Working · 2 · Episodic
+## Working & Episodic memory
 
 **Working memory (short-term)** — the *current task's* context: recent messages,
 last tool result, current goal. It **is** the context window (RAM).
@@ -922,7 +857,7 @@ this incident to a past one.
 
 ---
 
-## 3 · Semantic · 4 · Procedural
+## Semantic & Procedural memory
 
 **Semantic memory (long-term)** — **generalized facts**, not tied to an event:
 "Paris is the capital of France," "customer A is Enterprise."
@@ -1009,7 +944,7 @@ gets right and ad-hoc files get wrong.
 
 ---
 
-## Local demo (Claude Code) → production (mem0)
+## Local demo (Claude Code) → production (mem0 / AgentCore)
 
 Claude Code alone (files on disk) demos **all four** — single, local, one person:
 
@@ -1020,19 +955,25 @@ Claude Code alone (files on disk) demos **all four** — single, local, one pers
 | Episodic | old transcripts (`--resume`) + `feedback`/`project` files |
 | Procedural | `CLAUDE.md` + skills + system prompt + tools |
 
-At **multi-agent production**, hand-managed files break in 3 ways → **mem0**:
+At **multi-agent production**, hand-managed files break → use a real memory layer:
 
-1. **Scope & sharing** — keyed by user/session/agent/org; many agents share one
-   store.
-2. **Smart retrieval at scale** — vector + graph; `grep` can't keep up at
-   thousands.
-3. **Auto write/merge** — distill, dedupe, reconcile contradictions automatically.
+- **Scope & sharing** — keyed by user/session/agent/org, shared across agents
+- **Retrieval at scale** — vector + graph (not `grep`)
+- **Auto write/merge** — distill, dedupe, reconcile automatically
+
+Get it **self-hosted (mem0)** or **managed (AWS Bedrock AgentCore Memory)** — both
+give short-term + long-term with auto extraction strategies.
 
 <!--
-The jump from a local file demo to a real production layer. mem0 is NOT
-"cloud memory" (it self-hosts) — it's a shared, scoped, auto-managed memory layer
-with real retrieval. The three pain points are exactly what you hit the day you
-go multi-agent.
+The jump from a local file demo to a real production layer. Same three jobs,
+two delivery models. mem0 is NOT "cloud memory" — it self-hosts: a shared,
+scoped, auto-managed layer with real retrieval. If you'd rather not run it,
+AWS Bedrock AgentCore Memory is the managed equivalent — it gives agents
+short-term (per-session events) and long-term memory and auto-extracts facts
+via configurable strategies (semantic, summarization, user preferences), the
+same distill/dedupe job mem0 does. Pick managed when you don't want to operate
+the store; self-host when you want control/portability. The three pain points
+are exactly what you hit the day you go multi-agent.
 -->
 
 ---
@@ -1045,8 +986,8 @@ go multi-agent.
 - **Type** and **scope** (session/user/agent/org) are **independent** axes.
 - Long-term memory needs **write** (distill) + **retrieve** (load the relevant
   bit).
-- Files demo all four; **mem0** is the production layer for scope, retrieval, and
-  auto-merge.
+- Files demo all four; the production layer (**self-hosted mem0** or **managed
+  AWS Bedrock AgentCore Memory**) adds scope, retrieval, and auto-merge.
 
 <!--
 Recap. Now we have all four boxes. Final part: run the whole loop once,
@@ -1097,10 +1038,12 @@ review calls back into execution's tools — the parts interlock.
    an **agent**.
 2. **Planning** = reasoning: draft before answering, spend test-time compute,
    stop-and-ask when it's a human's call.
-3. **Execution** = tool calling via **MCP**: write once, use everywhere.
+3. **Execution** = the model emits a tool call; the client runs it. MCP is one
+   method — the **standard** — so you mostly **install** servers, not write them.
 4. **Review** = verify against **truth**, not the model's confidence; always have
    a **brake**.
-5. **Memory** = four types × scope; **write + retrieve**; files → mem0.
+5. **Memory** = four types × scope; **write + retrieve**; files → **mem0** (self-host)
+   or **AgentCore** (managed).
 6. **Use both kinds** — graft an agent onto your existing deterministic workflow:
    it reads your alerts and **reduces toil**; the static layer guards, the agent
    reasons.
