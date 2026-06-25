@@ -4,6 +4,10 @@ docs/ai-stack-transcript.md
 # --- rendered slide preview (regenerate from slides.md) ---
 slides.html
 
+# --- embedded reference clones (kept locally, not vendored into this repo) ---
+04-orchestration/execution/mcp/
+04-orchestration/memory/mem0/
+
 # --- Python ---
 __pycache__/
 *.py[cod]
