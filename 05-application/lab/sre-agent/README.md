@@ -28,9 +28,11 @@ alert ─▶ AgentCore Runtime (the agent) ─▶ EKS: read health, rollout hist
   Marketplace actions Bedrock's model-access flow needs, so on-demand Claude
   can't be enabled in this account. We point the agent at **OpenRouter**
   (OpenAI-compatible API) with **`google/gemma-4-31b-it:free`**. The only model
-  config is `OPENROUTER_API_KEY` (a lab default is baked into the code) — no
-  Bedrock model access, no use-case form, no inference profiles, no `bedrock:*`
-  IAM. Verify with:
+  config is **`OPENROUTER_API_KEY`**, which you must supply — the code default is
+  a placeholder (`sk-or-REPLACE-ME`), not a real key. `export` it locally **and**
+  pass it to the Runtime at launch (`--env`, see below) or every invoke 401s at
+  the model call. No Bedrock model access, no use-case form, no inference
+  profiles, no `bedrock:*` IAM. Verify your key with:
   ```bash
   curl -s https://openrouter.ai/api/v1/chat/completions \
     -H "Authorization: Bearer $OPENROUTER_API_KEY" \
@@ -52,8 +54,8 @@ alert ─▶ AgentCore Runtime (the agent) ─▶ EKS: read health, rollout hist
 
 ### 0. Tools & access
 `awscli`, `kubectl`, `eksctl`, `terraform`, `docker`, `python3` on PATH;
-admin AWS creds for `ap-southeast-1`; an **OpenRouter API key** (a lab default
-is baked into the agent, so this is only needed to use your own).
+admin AWS creds for `ap-southeast-1`; and an **OpenRouter API key** — required
+(the code ships only a placeholder). Get one at <https://openrouter.ai/keys>.
 
 > No Bedrock model access / use-case form is needed — the model is OpenRouter.
 
@@ -121,13 +123,18 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install bedrock-agentcore-starter-toolkit
 
 export AWS_REGION=ap-southeast-1
+export OPENROUTER_API_KEY=sk-or-...        # YOUR real key — the model 401s without it
 # configure (writes .bedrock_agentcore.yaml locally — creates nothing in AWS):
 agentcore configure -e agent/sre_agent.py -n sre_agent \
   -rf agent/requirements.txt --disable-memory
-# launch (builds an ARM64 container via CodeBuild → ECR, creates the Runtime):
-agentcore launch
+# launch — MUST inject the key as a Runtime env var, or every invoke fails at the model call:
+agentcore launch --env OPENROUTER_API_KEY="$OPENROUTER_API_KEY"
 agentcore status            # ← grab the execution role name for prerequisite step 3
 ```
+
+> ⚠️ Without `--env OPENROUTER_API_KEY=...`, `agentcore launch` still succeeds, but
+> the deployed agent has only the placeholder key and every `agentcore invoke`
+> 401s at the OpenRouter call. Re-launch with the flag to fix it.
 
 After step 3's grants are in place, the agent's tools can reach EKS + CloudWatch.
 

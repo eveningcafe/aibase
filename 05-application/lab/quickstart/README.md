@@ -39,6 +39,7 @@ aws sso login                      # refresh creds for ap-southeast-1
 python3 -m venv .venv && source .venv/bin/activate
 pip install bedrock-agentcore-starter-toolkit \
             bedrock-agentcore strands-agents strands-agents-tools
+export OPENROUTER_API_KEY=sk-or-... # YOUR real key — the code default is only a placeholder
 ```
 
 ### 1. Configure (writes Dockerfile + .bedrock_agentcore.yaml; auto-creates the exec role/ECR)
@@ -48,7 +49,8 @@ agentcore configure --entrypoint agent.py --region ap-southeast-1
 
 ### 2. Launch (CodeBuild → ECR → Runtime; no local Docker needed)
 ```bash
-agentcore launch
+# MUST inject the key, or the deployed agent has only the placeholder and invokes 401:
+agentcore launch --env OPENROUTER_API_KEY="$OPENROUTER_API_KEY"
 ```
 
 ### 3. Invoke
@@ -61,7 +63,8 @@ agentcore invoke '{"prompt": "What is 17 * 23 + 5?"}'
 agentcore launch --local        # runs the container on :8080
 agentcore invoke --local '{"prompt": "What is 12 squared?"}'
 ```
-Local still calls Bedrock, so it needs valid AWS creds in `ap-southeast-1`.
+Local calls **OpenRouter**, so `OPENROUTER_API_KEY` must be exported (step 0); no
+AWS Bedrock model access is involved.
 
 
 ## Bonus — an agent with memory (`agent-memory.py`)
@@ -79,7 +82,8 @@ or your local creds).
 ### Configure + launch it as its own runtime
 ```bash
 agentcore configure --entrypoint agent-memory.py --region ap-southeast-1
-agentcore launch --local        # or `agentcore launch` for the real microVM
+# local needs the key exported (step 0); the deployed microVM needs it via --env:
+agentcore launch --local        # or: agentcore launch --env OPENROUTER_API_KEY="$OPENROUTER_API_KEY"
 ```
 
 ### The record → recall demo (two invokes, with a wait between)
