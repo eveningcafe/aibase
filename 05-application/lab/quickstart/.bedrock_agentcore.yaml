@@ -1,4 +1,4 @@
-default_agent: quickstart
+default_agent: agent_memory
 agents:
   quickstart:
     name: quickstart
@@ -57,6 +57,188 @@ agents:
     authorizer_configuration: null
     request_header_configuration: null
     oauth_configuration: null
+    api_key_env_var_name: null
+    api_key_credential_provider_name: null
+    is_generated_by_agentcore_create: false
+  demo01:
+    name: demo01
+    language: python
+    node_version: '20'
+    entrypoint: /home/pac/Documents/vscode/aibase/05-application/lab/quickstart/agent.py
+    deployment_type: container
+    runtime_type: null
+    platform: linux/arm64
+    container_runtime: docker
+    source_path: /home/pac/Documents/vscode/aibase/05-application/lab/quickstart
+    aws:
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKRuntime-ap-southeast-1-a2fe121620
+      execution_role_auto_create: false
+      account: '891920435433'
+      region: ap-southeast-1
+      ecr_repository: 891920435433.dkr.ecr.ap-southeast-1.amazonaws.com/bedrock-agentcore-demo01
+      ecr_auto_create: false
+      s3_path: null
+      s3_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+      lifecycle_configuration:
+        idle_runtime_session_timeout: null
+        max_lifetime: null
+    bedrock_agentcore:
+      agent_id: demo01-TyE04s9BS8
+      agent_arn: arn:aws:bedrock-agentcore:ap-southeast-1:891920435433:runtime/demo01-TyE04s9BS8
+      agent_session_id: c4969e95-2d59-4c9a-9532-9fdd65a7e0f8
+    codebuild:
+      project_name: bedrock-agentcore-demo01-builder
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKCodeBuild-ap-southeast-1-a2fe121620
+      source_bucket: bedrock-agentcore-codebuild-sources-891920435433-ap-southeast-1
+    memory:
+      mode: STM_AND_LTM
+      memory_id: demo01_mem-X9vmh02dJO
+      memory_arn: arn:aws:bedrock-agentcore:ap-southeast-1:891920435433:memory/demo01_mem-X9vmh02dJO
+      memory_name: demo01_mem
+      event_expiry_days: 30
+      first_invoke_memory_check_done: true
+      was_created_by_toolkit: true
+    identity:
+      credential_providers: []
+      workload: null
+    aws_jwt:
+      enabled: false
+      audiences: []
+      signing_algorithm: ES384
+      issuer_url: null
+      duration_seconds: 300
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration: null
+    api_key_env_var_name: null
+    api_key_credential_provider_name: null
+    is_generated_by_agentcore_create: false
+  demo02:
+    name: demo02
+    language: python
+    node_version: '20'
+    entrypoint: /home/pac/Documents/vscode/aibase/05-application/lab/quickstart/agent.py
+    deployment_type: container
+    runtime_type: null
+    platform: linux/arm64
+    container_runtime: docker
+    source_path: /home/pac/Documents/vscode/aibase/05-application/lab/quickstart
+    aws:
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKRuntime-ap-southeast-1-eab5551936
+      execution_role_auto_create: false
+      account: '891920435433'
+      region: ap-southeast-1
+      ecr_repository: 891920435433.dkr.ecr.ap-southeast-1.amazonaws.com/bedrock-agentcore-demo02
+      ecr_auto_create: false
+      s3_path: null
+      s3_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+      lifecycle_configuration:
+        idle_runtime_session_timeout: null
+        max_lifetime: null
+    bedrock_agentcore:
+      agent_id: demo02-qBxZIDDn4W
+      agent_arn: arn:aws:bedrock-agentcore:ap-southeast-1:891920435433:runtime/demo02-qBxZIDDn4W
+      agent_session_id: demo30jun111111111111111111111111
+    codebuild:
+      project_name: bedrock-agentcore-demo02-builder
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKCodeBuild-ap-southeast-1-eab5551936
+      source_bucket: bedrock-agentcore-codebuild-sources-891920435433-ap-southeast-1
+    memory:
+      mode: STM_AND_LTM
+      memory_id: quickstart_mem-E1ILI72q9N
+      memory_arn: null
+      memory_name: demo02_memory
+      event_expiry_days: 30
+      first_invoke_memory_check_done: false
+      was_created_by_toolkit: false
+    identity:
+      credential_providers: []
+      workload: null
+    aws_jwt:
+      enabled: false
+      audiences: []
+      signing_algorithm: ES384
+      issuer_url: null
+      duration_seconds: 300
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration: null
+    api_key_env_var_name: null
+    api_key_credential_provider_name: null
+    is_generated_by_agentcore_create: false
+  agent_memory:
+    name: agent_memory
+    language: python
+    node_version: '20'
+    entrypoint: /home/pac/Documents/vscode/aibase/05-application/lab/quickstart/agent-memory.py
+    deployment_type: container
+    runtime_type: null
+    platform: linux/arm64
+    container_runtime: docker
+    source_path: /home/pac/Documents/vscode/aibase/05-application/lab/quickstart
+    aws:
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKRuntime-ap-southeast-1-63b8d043ae
+      execution_role_auto_create: false
+      account: '891920435433'
+      region: ap-southeast-1
+      ecr_repository: 891920435433.dkr.ecr.ap-southeast-1.amazonaws.com/bedrock-agentcore-agent_memory
+      ecr_auto_create: false
+      s3_path: null
+      s3_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+      lifecycle_configuration:
+        idle_runtime_session_timeout: null
+        max_lifetime: null
+    bedrock_agentcore:
+      agent_id: agent_memory-pbZdqi4vnW
+      agent_arn: arn:aws:bedrock-agentcore:ap-southeast-1:891920435433:runtime/agent_memory-pbZdqi4vnW
+      agent_session_id: ea22c80d-ce74-4116-a044-47d6a4c082da
+    codebuild:
+      project_name: bedrock-agentcore-agent_memory-builder
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKCodeBuild-ap-southeast-1-63b8d043ae
+      source_bucket: bedrock-agentcore-codebuild-sources-891920435433-ap-southeast-1
+    memory:
+      mode: STM_AND_LTM
+      memory_id: quickstart_mem-E1ILI72q9N
+      memory_arn: null
+      memory_name: agent_memory_memory
+      event_expiry_days: 30
+      first_invoke_memory_check_done: false
+      was_created_by_toolkit: false
+    identity:
+      credential_providers: []
+      workload: null
+    aws_jwt:
+      enabled: false
+      audiences: []
+      signing_algorithm: ES384
+      issuer_url: null
+      duration_seconds: 300
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration:
+      workload_name: workload-e802b277
+      userId: null
     api_key_env_var_name: null
     api_key_credential_provider_name: null
     is_generated_by_agentcore_create: false

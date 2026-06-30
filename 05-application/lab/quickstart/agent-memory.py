@@ -114,26 +114,7 @@ def invoke(payload, context):
 
 
 if __name__ == "__main__":
-    # `agentcore launch` runs the server; this local block is a quick smoke test:
-    #   python agent-memory.py            # serves on :8080 like app.run()
-    # For a scripted record→recall demo without the server, set DEMO=1:
-    #   DEMO=1 python agent-memory.py
-    if os.getenv("DEMO") == "1":
-        tools = _memory_tools(actor_id="sre-team", session_id="demo-incident-001")
-        agent = Agent(model=model, system_prompt=SYSTEM_PROMPT, tools=tools)
-
-        print("— teaching the agent two facts —")
-        print(agent(
-            "Record these for the team: checkout-api is owned by the Payments "
-            "squad, and its last known-good image is nginx:1.27-alpine. "
-            "On high latency, the runbook is: roll back to the known-good image, "
-            "then re-check pod restarts before declaring resolved."
-        ).message)
-
-        print("\n— recalling (would survive a fresh session in the real backend) —")
-        print(agent(
-            "checkout-api latency is spiking. Who owns it and what image do I "
-            "roll back to?"
-        ).message)
-    else:
-        app.run()
+    # `agentcore launch` runs the server; locally `agentcore launch --local`
+    # serves this on :8080. The record→recall demo is driven from the outside
+    # with `agentcore invoke` — see README.md.
+    app.run()
