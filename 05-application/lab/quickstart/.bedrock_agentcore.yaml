@@ -212,7 +212,7 @@ agents:
     bedrock_agentcore:
       agent_id: agent_memory-pbZdqi4vnW
       agent_arn: arn:aws:bedrock-agentcore:ap-southeast-1:891920435433:runtime/agent_memory-pbZdqi4vnW
-      agent_session_id: ea22c80d-ce74-4116-a044-47d6a4c082da
+      agent_session_id: c11da7b1-dcc1-4893-9046-bd4ce9286616
     codebuild:
       project_name: bedrock-agentcore-agent_memory-builder
       execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKCodeBuild-ap-southeast-1-63b8d043ae
@@ -236,9 +236,7 @@ agents:
       duration_seconds: 300
     authorizer_configuration: null
     request_header_configuration: null
-    oauth_configuration:
-      workload_name: workload-e802b277
-      userId: null
+    oauth_configuration: null
     api_key_env_var_name: null
     api_key_credential_provider_name: null
     is_generated_by_agentcore_create: false

@@ -10,7 +10,7 @@ model-access flow needs, so on-demand Claude can't be enabled in this account.
 
 Env:
   OPENROUTER_API_KEY   OpenRouter key (defaults to the lab key below)
-  MODEL_ID             openai/gpt-oss-120b:free
+  MODEL_ID             google/gemma-4-31b-it:free
 """
 import os
 
@@ -29,9 +29,9 @@ OPENROUTER_API_KEY  = os.getenv(
 # Backups if the demo fails (all free, reasoning + tool-calling, verified working
 # through this agent). Swap with: export MODEL_ID="...". Pick a different provider
 # so one upstream outage/rate-limit doesn't take out both:
+#   openai/gpt-oss-120b:free                 # OpenAI OSS, different stack
 #   nvidia/nemotron-3-super-120b-a12b:free   # strongest, NVIDIA infra, 1M ctx
-#   google/gemma-4-31b-it:free               # Google, different stack
-MODEL_ID = os.getenv("MODEL_ID", "openai/gpt-oss-120b:free")
+MODEL_ID = os.getenv("MODEL_ID", "google/gemma-4-31b-it:free")
 
 # OpenRouter speaks the OpenAI chat-completions API; Strands' OpenAIModel just
 # needs the base_url + key pointed at it.

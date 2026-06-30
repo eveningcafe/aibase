@@ -69,45 +69,62 @@ AWS Bedrock model access is involved.
 
 ## Bonus — an agent with memory (`agent-memory.py`)
 
-Same shape as `agent.py`, but the tool is **persistent memory** instead of a
-calculator: an on-call SRE assistant that *records* durable operational facts
-and *retrieves* them by meaning on a later call — even from a fresh session.
+Same shape as `agent.py`, but the tools are **persistent memory** instead of a
+calculator: an on-call SRE assistant with two tools — `remember(fact)` and
+`recall(query)` — that saves durable operational facts and recalls them by
+meaning on a later call, even from a fresh session.
 
-It uses the Strands `AgentCoreMemoryToolProvider` over **Amazon Bedrock
-AgentCore Memory** (the resource the toolkit already provisioned for this
-project — `memory.memory_id` in `.bedrock_agentcore.yaml`). The LLM is still
-OpenRouter (plain API key); the Memory APIs are pure IAM (the Runtime exec role,
-or your local creds).
+It talks directly to **Amazon Bedrock AgentCore Memory** (the resource the
+toolkit already provisioned for this project — `memory.memory_id` in
+`.bedrock_agentcore.yaml`). Its long-term *SemanticFacts* strategy extracts
+facts into the namespace `/users/{actorId}/facts/`. The LLM is still OpenRouter
+(plain API key); the Memory APIs are pure IAM (the Runtime exec role, or your
+local creds).
 
 ### Configure + launch it as its own runtime
 ```bash
 agentcore configure --entrypoint agent-memory.py --region ap-southeast-1
-# local needs the key exported (step 0); the deployed microVM needs it via --env:
-agentcore launch --local        # or: agentcore launch --env OPENROUTER_API_KEY="$OPENROUTER_API_KEY"
+# builds natively on ARM CodeBuild; MUST inject the key or invokes 401:
+agentcore launch --env OPENROUTER_API_KEY="$OPENROUTER_API_KEY"
 ```
 
-### The record → recall demo (two invokes, with a wait between)
+### The remember → recall demo (two invokes, with a wait between)
 
-**1. Teach it some facts** — the agent calls `agent_core_memory(action="record")`:
+**1. Teach it some facts** — the agent calls `remember(fact=...)`:
 ```bash
-agentcore invoke --local '{"prompt": "Record these for the team: checkout-api is owned by the Payments squad, its last known-good image is nginx:1.27-alpine, and on high latency the runbook is roll back to that image."}'
+agentcore invoke '{"prompt": "Remember for the team: checkout-api is owned by the Payments squad, its last known-good image is nginx:1.27-alpine, and on high latency the runbook is roll back to that image."}'
 ```
 
-**2. Wait ~2 minutes.** `record` only stores a raw event; AgentCore's long-term
-memory *strategies* run asynchronously to extract durable, searchable records.
-Ask too soon and `retrieve` comes back empty.
+**2. Wait ~1–2 minutes.** `remember` only stores a raw USER event; AgentCore's
+SemanticFacts strategy runs asynchronously to extract durable, searchable facts
+into `/users/sre-team/facts/`. Ask too soon and `recall` comes back empty.
 
-**3. Ask a related question** — the agent calls `agent_core_memory(action="retrieve")`
-and grounds its answer in what it stored:
+**3. Ask a related question** — the agent calls `recall(query=...)` and grounds
+its answer in what it stored:
 ```bash
-agentcore invoke --local '{"prompt": "checkout-api latency is spiking. Who owns it and what image do I roll back to?"}'
+agentcore invoke '{"prompt": "checkout-api latency is spiking. Who owns it and what image do I roll back to?"}'
 ```
 Expect it to recall *Payments squad* and *nginx:1.27-alpine* — facts it was
 never told in this second call.
 
-> **Namespace gotcha:** `record` and `retrieve` must share a namespace
-> (`MEMORY_NAMESPACE`, default `/sre/runbook`) and the memory's LTM strategy
-> must extract into that same path, or searches return nothing.
+**Watch it work from the AWS side:**
+```bash
+# the raw events your remember() wrote (note role=USER):
+aws bedrock-agentcore list-events --memory-id quickstart_mem-E1ILI72q9N \
+  --actor-id sre-team --session-id <session> --region ap-southeast-1
+# the extracted facts recall() reads (empty until extraction finishes):
+aws bedrock-agentcore retrieve-memory-records --memory-id quickstart_mem-E1ILI72q9N \
+  --namespace "/users/sre-team/facts/" \
+  --search-criteria '{"searchQuery":"checkout-api owner"}' --region ap-southeast-1
+```
+
+> **Two gotchas this lab already hit** (both fixed in `agent-memory.py`):
+> 1. **Role** — facts are extracted only from `USER`-role events, so `remember`
+>    writes `role: USER`, not `ASSISTANT`.
+> 2. **Namespace** — `recall` must read the exact path the strategy writes to,
+>    `/users/{actorId}/facts/`. Any other namespace returns nothing. Confirm the
+>    strategies on your memory with `aws bedrock-agentcore-control get-memory
+>    --memory-id quickstart_mem-E1ILI72q9N --region ap-southeast-1`.
 
 ---
 
