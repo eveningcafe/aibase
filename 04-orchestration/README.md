@@ -576,22 +576,6 @@ writing spots errors they missed while writing.
 > Same idea: **spend extra tokens/compute to buy a more-correct answer**
 > (test-time compute), just applied *after* the first draft.
 
-### Two kinds of review — self-critique vs grounded verification
-
-This is the most important distinction in this section.
-
-| | **Self-critique** | **Grounded verification** |
-|---|---|---|
-| What the model leans on | *its own knowledge/reasoning* | *evidence from the real world* (tool, test, metric) |
-| Question it answers | "Is this reasoning sound?" | "Did that action actually work?" |
-| Weakness | the model can be **confidently wrong** — critiques as badly as it generated | needs a tool/data to check against |
-| Example | re-read the report, fix wording, fill a missing step | call the metric tool again to see if 5xx normalized |
-
-Self-critique alone is **not enough**: if the model misunderstood the problem, it
-will critique according to that same misunderstanding. The strongest review is
-**anchored to external truth** — which is exactly when `review` calls the tools
-from §2 again.
-
 ```
 SRE agent — verification after the rollback:
 

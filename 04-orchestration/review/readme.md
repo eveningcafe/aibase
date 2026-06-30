@@ -1,15 +1,5 @@
 # Review — agent tự chấm, xác minh, và đóng vòng lặp
 
-> Tóm lược & diễn giải về **Reflection pattern** trong agentic AI — lấy cảm hứng
-> từ Andrew Ng, *Agentic Design Patterns Part 2: Reflection* (DeepLearning.AI ·
-> The Batch) và bài báo **Reflexion** (Shinn et al., 2023).
-
-Đây là ô **`review/`** — chặng **cuối** trong vòng lặp orchestration ở
-[../README.md](../README.md): `plan → execute → review → (memory) → loop`. Sau khi
-agent đã *nghĩ* ([../planning/readme.md](../planning/readme.md)) và *hành động*
-([../execution/mcp/readme.md](../execution/mcp/readme.md)), phần này hỏi một câu
-duy nhất nhưng then chốt: **"vừa làm xong, có ĐÚNG không?"** — rồi quyết định
-**đóng vòng lặp** hay **quay lại lập kế hoạch lần nữa**.
 
 > **Tiếp mạch agent SRE.** Ở `planning/`, agent đã suy ra nguyên nhân (deploy v2.3
 > siết DB pool) và *dừng lại hỏi* — SRE chọn **rollback về v2.2**. Ở `execution/`,

@@ -1,0 +1,62 @@
+default_agent: quickstart
+agents:
+  quickstart:
+    name: quickstart
+    language: python
+    node_version: '20'
+    entrypoint: /home/pac/Documents/vscode/aibase/05-application/lab/quickstart/agent.py
+    deployment_type: container
+    runtime_type: null
+    platform: linux/arm64
+    container_runtime: docker
+    source_path: /home/pac/Documents/vscode/aibase/05-application/lab/quickstart
+    aws:
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKRuntime-ap-southeast-1-ed4f0b24c4
+      execution_role_auto_create: false
+      account: '891920435433'
+      region: ap-southeast-1
+      ecr_repository: 891920435433.dkr.ecr.ap-southeast-1.amazonaws.com/bedrock-agentcore-quickstart
+      ecr_auto_create: false
+      s3_path: null
+      s3_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+      lifecycle_configuration:
+        idle_runtime_session_timeout: null
+        max_lifetime: null
+    bedrock_agentcore:
+      agent_id: quickstart-OI3vNjC8hG
+      agent_arn: arn:aws:bedrock-agentcore:ap-southeast-1:891920435433:runtime/quickstart-OI3vNjC8hG
+      agent_session_id: 5b26fa21-ca3c-4d38-a518-c533e37a0abc
+    codebuild:
+      project_name: bedrock-agentcore-quickstart-builder
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKCodeBuild-ap-southeast-1-ed4f0b24c4
+      source_bucket: bedrock-agentcore-codebuild-sources-891920435433-ap-southeast-1
+    memory:
+      mode: STM_AND_LTM
+      memory_id: quickstart_mem-E1ILI72q9N
+      memory_arn: null
+      memory_name: quickstart_memory
+      event_expiry_days: 30
+      first_invoke_memory_check_done: false
+      was_created_by_toolkit: false
+    identity:
+      credential_providers: []
+      workload: null
+    aws_jwt:
+      enabled: false
+      audiences: []
+      signing_algorithm: ES384
+      issuer_url: null
+      duration_seconds: 300
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration: null
+    api_key_env_var_name: null
+    api_key_credential_provider_name: null
+    is_generated_by_agentcore_create: false

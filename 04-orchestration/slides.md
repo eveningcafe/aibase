@@ -672,12 +672,13 @@ prod system. This slide justifies the entire box: confidence is not correctness.
 
 ## Two kinds of review
 
-| | **Self-critique** | **Grounded verification** |
+| Aspect | **Self-critique** | **Grounded verification** |
 |---|---|---|
-| Leans on | the model's own reasoning | real-world evidence (tool/test/metric) |
-| Question | "Is this reasoning sound?" | "Did the action actually work?" |
-| Weakness | can be **confidently wrong** | needs a tool/data to check |
-| Example | re-read, fix wording | re-query 5xx to see if it normalized |
+| **Checks against** | the model's own reasoning | real-world evidence (tool/test/metric) |
+| **The question** | "Is my reasoning sound?" | "Did the action actually work?" |
+| **Like a human...** | proofreading your own essay | re-running the failing test |
+| **The catch** | can be **confidently wrong** | needs a real tool/data to check |
+| **Example** | re-read, fix wording | re-query 5xx to see if it normalized |
 
 > Self-critique alone is **not enough**: misunderstand the problem → critique by
 > the same misunderstanding. The strongest review is **anchored to external

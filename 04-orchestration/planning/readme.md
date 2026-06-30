@@ -1,21 +1,5 @@
 # Planning — agent suy nghĩ, dừng lại, và hỏi
 
-> Tóm lược & diễn giải, lấy cảm hứng từ video **"What Are Large Reasoning Models
-> (LRMs)? Smarter AI Beyond LLMs"** — IBM Technology ·
-> <https://www.youtube.com/watch?v=enLbj0igyx4>
-
-Đây là ô **`planning/`** trong vòng lặp orchestration ở [../README.md](../README.md):
-`plan → execute → review → (memory) → loop`. Phần này nói về cái **"plan"** —
-khâu *suy nghĩ* trước khi hành động: phân rã tác vụ, quyết định cần dữ liệu/tool gì,
-và biết **khi nào nên dừng lại hỏi người dùng**.
-
-> **Ví dụ xuyên suốt — một agent SRE.** Lúc 14:35, cảnh báo nổ: service
-> `checkout-api` lỗi **5xx tăng vọt**. SRE trực không tự gõ runbook, chỉ nói ý định:
-> *"checkout-api đang lỗi 5xx, xử lý giúp."* Cả bài này ta bám theo agent đó —
-> từ lúc nó *suy luận tìm nguyên nhân*, đến lúc *dừng lại hỏi* nên rollback hay không.
-
----
-
 ## 1. Khác gì phần mềm truyền thống?
 
 Điểm cốt lõi nằm ở **ai viết ra các bước**.

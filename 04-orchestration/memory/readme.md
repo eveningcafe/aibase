@@ -1,8 +1,4 @@
-# Memory — 4 loại bộ nhớ mỗi agent cần
-
-> Tóm lược & diễn giải từ video **"The Four Types of Memory Every AI Agent Needs"**
-> — Martin Keen, IBM Technology · <https://www.youtube.com/watch?v=BacJ6sEhqMo>
-
+# Memory — 4 loại bộ nhớ mỗi agent cần                                                                                                                                                                       |  999999
 ## Vì sao agent cần bộ nhớ?
 
 Tự thân, một LLM **không có trạng thái** (stateless): mỗi lần gọi nó chỉ thấy đúng

@@ -1,0 +1,52 @@
+# checkout-api — healthy baseline ("v2.2"). Serves HTTP 200 via nginx.
+# The agent rolls back TO this image (nginx:1.27-alpine) after a bad deploy.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-api
+  labels:
+    app: checkout-api
+  annotations:
+    kubernetes.io/change-cause: "v2.2 baseline (nginx, healthy)"
+spec:
+  replicas: 2
+  revisionHistoryLimit: 10        # keep revisions so rollback has targets
+  selector:
+    matchLabels:
+      app: checkout-api
+  template:
+    metadata:
+      labels:
+        app: checkout-api
+    spec:
+      containers:
+        - name: app
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkout-api
+  labels:
+    app: checkout-api
+spec:
+  selector:
+    app: checkout-api
+  ports:
+    - port: 80
+      targetPort: 80
