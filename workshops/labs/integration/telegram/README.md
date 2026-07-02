@@ -71,19 +71,31 @@ python bridge.py        # starts one poller per bot with a token set
 
 ## Try it (in the group)
 
+**Use `/ask@<bot>` — the reliable trigger.** Telegram always delivers a
+slash-command addressed to a bot, even under privacy mode; a plain `@mention` is
+*not* delivered to bots in a basic group (convert to a supergroup for that). Only
+the addressed bot answers.
+
 ```
-@incident_rca_bot   checkout-api is throwing 5xx, deal with it.
-@rag_telemetry_bot  checkout-api latency is spiking — who owns it, what do we roll back to?
-@iac_guardrails_bot write Terraform for an SSH SG + S3 bucket, approve only if it passes policy
-@cicd_risk_bot      a PR changes db-pool-size on checkout-api — should it merge?
-/reset@incident_rca_bot   # fresh incident before re-demoing case 1
+/ask@demo_incident_rca_bot   checkout-api is throwing 5xx, deal with it.
+/ask@demo_rag_telemetry_bot  who owns checkout-api and what do we roll back to?
+/ask@demo_iac_guardrails_bot write Terraform for an SSH SG + S3 bucket, approve only if it passes policy
+/ask@demo_cicd_risk_bot      a PR changes db-pool-size on checkout-api — should it merge?
+/reset@demo_incident_rca_bot # fresh incident before re-demoing case 1
 ```
+
+A plain `@mention` (or a reply to the bot) also works where Telegram delivers it
+(privacy off, supergroups, or 1:1 chats) — same handler underneath.
 
 ## Notes
 
 - **ARNs** live in `config.py` (from `workshops/labs/.bedrock_agentcore.yaml`).
   After a redeploy, refresh them (`agentcore status`).
 - **No secrets committed** — tokens are read from `TG_TOKEN_*` env vars only.
+- **AWS creds**: the bridge signs `invoke_agent_runtime` with the host's creds. On
+  SSO those expire after a few hours → replies fail with *"Token has expired"*; run
+  `aws sso login` and restart the bridge. For a long-running bot, give the host a
+  non-expiring identity (IAM role / instance profile) instead of SSO.
 - **Latency**: a first mention may cold-start the microVM (a few seconds); the bot
   shows a "typing…" action while the Runtime works.
 - **1-bot alternative**: you could run a single bot that routes by command

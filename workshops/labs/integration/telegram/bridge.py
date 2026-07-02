@@ -66,30 +66,54 @@ def _addressed_to(msg, username: str, bot_id: int) -> bool:
     return False
 
 
+async def _respond(name: str, cfg: dict, update, context, prompt: str):
+    """Shared path: derive the per-group session, invoke the Runtime, reply."""
+    prompt = prompt.strip()
+    msg = update.effective_message
+    if not prompt:
+        await msg.reply_text(
+            f"I'm the *{name}* agent ({cfg['blurb']}). Ask me with "
+            f"`/ask@<bot> <question>` or by @mention.", parse_mode="Markdown")
+        return
+    chat_id = update.effective_chat.id
+    session_id = _session_id(chat_id, name)
+    actor_id = f"tg-room-{chat_id}"
+    await context.bot.send_chat_action(chat_id, "typing")
+    try:
+        answer = await asyncio.to_thread(
+            _invoke_runtime, cfg["runtime_arn"], session_id, actor_id, prompt)
+    except Exception as e:                          # noqa: BLE001 — surface to chat
+        log.exception("%s invoke failed", name)
+        answer = f"⚠️ runtime error: {e}"
+    await msg.reply_text(answer)
+
+
 def _make_message_handler(name: str, cfg: dict, username: str, bot_id: int):
+    """@mention / reply trigger — works when Telegram delivers mentions (privacy
+    off, or supergroups). In a basic group with privacy on, use /ask instead."""
     async def handler(update, context):
         msg = update.effective_message
         if not msg or not msg.text:
             return
         if not _addressed_to(msg, username, bot_id):
             return                              # not aimed at this bot — stay quiet
-        prompt = msg.text.replace(f"@{username}", "").strip()
-        if not prompt:
-            await msg.reply_text(f"Hi — I'm the *{name}* agent ({cfg['blurb']}). "
-                                 "Mention me with your question.", parse_mode="Markdown")
-            return
-        chat_id = update.effective_chat.id
-        session_id = _session_id(chat_id, name)
-        actor_id = f"tg-room-{chat_id}"
-        await context.bot.send_chat_action(chat_id, "typing")
-        try:
-            answer = await asyncio.to_thread(
-                _invoke_runtime, cfg["runtime_arn"], session_id, actor_id, prompt)
-        except Exception as e:                      # noqa: BLE001 — surface to chat
-            log.exception("%s invoke failed", name)
-            answer = f"⚠️ runtime error: {e}"
-        await msg.reply_text(answer)
+        await _respond(name, cfg, update, context, msg.text.replace(f"@{username}", ""))
     return handler
+
+
+def _make_ask_handler(name: str, cfg: dict, username: str):
+    """/ask@<bot> <question> — the RELIABLE trigger: privacy mode always delivers
+    slash-commands addressed to a bot, unlike plain @mentions in basic groups."""
+    async def ask(update, context):
+        msg = update.effective_message
+        text = msg.text or ""
+        first = text.split(maxsplit=1)[0] if text.split() else ""
+        if msg.chat.type != "private":
+            # in a group, require /ask@thisbot so only the addressed bot answers
+            if "@" not in first or first.split("@", 1)[1].lower() != username.lower():
+                return
+        await _respond(name, cfg, update, context, text[len(first):])
+    return ask
 
 
 def _make_reset_handler(name: str):
@@ -105,6 +129,7 @@ async def _start_bot(name: str, cfg: dict) -> Application:
     app = Application.builder().token(cfg["token"]).build()
     me = await app.bot.get_me()
     app.add_handler(CommandHandler("reset", _make_reset_handler(name)))
+    app.add_handler(CommandHandler("ask", _make_ask_handler(name, cfg, me.username)))
     app.add_handler(MessageHandler(
         filters.TEXT & ~filters.COMMAND,
         _make_message_handler(name, cfg, me.username, me.id)))
