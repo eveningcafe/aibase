@@ -45,25 +45,12 @@ Datadog Bits AI SRE.
 self-reported and not independently benchmarked. Autonomous remediation is still
 **human-in-the-loop** — the AI proposes, a human approves production actions.
 
-## 2. Observability & anomaly detection
 
-*JD: integrate GenAI with Datadog/Prometheus/Grafana/OpenTelemetry; natural-
-language querying of platform health; SLIs/SLOs*
-
-- **Datadog Bits Assistant** — query dashboards, logs, traces, and incidents in
-  plain language; no query-syntax expertise needed.
-- **Grafana Assistant** — natural-language telemetry questions + ML-based
-  correlation to flag anomalies.
-- **Datadog Toto** — a timeseries foundation model powering anomaly detection
-  and forecasting (Watchdog, Bits AI).
-
-The shift: SLI/SLO and pipeline health become **queryable in natural language**,
-and anomalies surface proactively instead of waiting on static thresholds.
-
-## 3. RAG over telemetry & incident history
+## 2. RAG over telemetry & incident history
 
 *JD: leverage vector databases (FAISS, Weaviate) to retrieve telemetry and
-incident history for GenAI prompts*
+incident history for GenAI prompts; integrate with Datadog/Prometheus/Grafana/
+OpenTelemetry for natural-language querying of platform health and SLIs/SLOs*
 
 AI-SRE grounds the LLM in **your** system via RAG: logs, metrics, traces,
 runbooks, deployment metadata, and past postmortems are embedded and stored in a
@@ -74,7 +61,7 @@ scattered history into queryable **institutional memory**.
 This is layer 3 doing real work: without grounding, the model only knows generic
 text; with it, it knows *your* outages.
 
-## 4. Infrastructure as Code with AI — and its biggest risk
+## 3. Infrastructure as Code with AI — and its biggest risk
 
 *JD: design/operate platforms; automate with GenAI; risk of config/schema
 changes*
@@ -138,7 +125,7 @@ errors, but humans tire and skip; **L3** is automated and consistent — it catc
 the misconfigurations humans miss. The hard rule lives in L3: a failing checkov
 HIGH blocks `apply`, no exceptions.
 
-## 5. CI/CD risk & guardrails — the frontier
+## 4. CI/CD risk & guardrails — the frontier
 
 *JD: blast-radius analysis, deployment guardrails, risk of config/schema
 changes, automated validation & rollback*

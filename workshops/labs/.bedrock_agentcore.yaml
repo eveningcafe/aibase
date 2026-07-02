@@ -1,0 +1,242 @@
+default_agent: cicd_risk
+agents:
+  incident_rca:
+    name: incident_rca
+    language: python
+    node_version: '20'
+    entrypoint: /home/pac/Documents/vscode/aibase/workshops/labs/01-incident-rca/agent.py
+    deployment_type: container
+    runtime_type: null
+    platform: linux/arm64
+    container_runtime: docker
+    source_path: /home/pac/Documents/vscode/aibase/workshops/labs/01-incident-rca
+    aws:
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKRuntime-ap-southeast-1-5cce61ca0b
+      execution_role_auto_create: false
+      account: '891920435433'
+      region: ap-southeast-1
+      ecr_repository: 891920435433.dkr.ecr.ap-southeast-1.amazonaws.com/bedrock-agentcore-incident_rca
+      ecr_auto_create: false
+      s3_path: null
+      s3_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+      lifecycle_configuration:
+        idle_runtime_session_timeout: null
+        max_lifetime: null
+    bedrock_agentcore:
+      agent_id: incident_rca-bvnyVp2LHv
+      agent_arn: arn:aws:bedrock-agentcore:ap-southeast-1:891920435433:runtime/incident_rca-bvnyVp2LHv
+      agent_session_id: incident-checkout-5xx-fresh-000000000001
+    codebuild:
+      project_name: bedrock-agentcore-incident_rca-builder
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKCodeBuild-ap-southeast-1-5cce61ca0b
+      source_bucket: bedrock-agentcore-codebuild-sources-891920435433-ap-southeast-1
+    memory:
+      mode: STM_ONLY
+      memory_id: incident_rca_mem-kNBBYgDczC
+      memory_arn: arn:aws:bedrock-agentcore:ap-southeast-1:891920435433:memory/incident_rca_mem-kNBBYgDczC
+      memory_name: incident_rca_mem
+      event_expiry_days: 30
+      first_invoke_memory_check_done: true
+      was_created_by_toolkit: true
+    identity:
+      credential_providers: []
+      workload: null
+    aws_jwt:
+      enabled: false
+      audiences: []
+      signing_algorithm: ES384
+      issuer_url: null
+      duration_seconds: 300
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration: null
+    api_key_env_var_name: null
+    api_key_credential_provider_name: null
+    is_generated_by_agentcore_create: false
+  rag_telemetry:
+    name: rag_telemetry
+    language: python
+    node_version: '20'
+    entrypoint: /home/pac/Documents/vscode/aibase/workshops/labs/02-rag-telemetry/agent.py
+    deployment_type: container
+    runtime_type: null
+    platform: linux/arm64
+    container_runtime: docker
+    source_path: /home/pac/Documents/vscode/aibase/workshops/labs/02-rag-telemetry
+    aws:
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKRuntime-ap-southeast-1-3096c9c7a8
+      execution_role_auto_create: false
+      account: '891920435433'
+      region: ap-southeast-1
+      ecr_repository: 891920435433.dkr.ecr.ap-southeast-1.amazonaws.com/bedrock-agentcore-rag_telemetry
+      ecr_auto_create: false
+      s3_path: null
+      s3_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+      lifecycle_configuration:
+        idle_runtime_session_timeout: null
+        max_lifetime: null
+    bedrock_agentcore:
+      agent_id: rag_telemetry-boIH0B9d4o
+      agent_arn: arn:aws:bedrock-agentcore:ap-southeast-1:891920435433:runtime/rag_telemetry-boIH0B9d4o
+      agent_session_id: demo-rag-telemetry-session-000000000001
+    codebuild:
+      project_name: bedrock-agentcore-rag_telemetry-builder
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKCodeBuild-ap-southeast-1-3096c9c7a8
+      source_bucket: bedrock-agentcore-codebuild-sources-891920435433-ap-southeast-1
+    memory:
+      mode: STM_ONLY
+      memory_id: rag_telemetry_mem-GPAPrq428H
+      memory_arn: arn:aws:bedrock-agentcore:ap-southeast-1:891920435433:memory/rag_telemetry_mem-GPAPrq428H
+      memory_name: rag_telemetry_mem
+      event_expiry_days: 30
+      first_invoke_memory_check_done: true
+      was_created_by_toolkit: true
+    identity:
+      credential_providers: []
+      workload: null
+    aws_jwt:
+      enabled: false
+      audiences: []
+      signing_algorithm: ES384
+      issuer_url: null
+      duration_seconds: 300
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration: null
+    api_key_env_var_name: null
+    api_key_credential_provider_name: null
+    is_generated_by_agentcore_create: false
+  iac_guardrails:
+    name: iac_guardrails
+    language: python
+    node_version: '20'
+    entrypoint: /home/pac/Documents/vscode/aibase/workshops/labs/03-iac-guardrails/agent.py
+    deployment_type: container
+    runtime_type: null
+    platform: linux/arm64
+    container_runtime: docker
+    source_path: /home/pac/Documents/vscode/aibase/workshops/labs/03-iac-guardrails
+    aws:
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKRuntime-ap-southeast-1-ecde077b44
+      execution_role_auto_create: false
+      account: '891920435433'
+      region: ap-southeast-1
+      ecr_repository: 891920435433.dkr.ecr.ap-southeast-1.amazonaws.com/bedrock-agentcore-iac_guardrails
+      ecr_auto_create: false
+      s3_path: null
+      s3_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+      lifecycle_configuration:
+        idle_runtime_session_timeout: null
+        max_lifetime: null
+    bedrock_agentcore:
+      agent_id: iac_guardrails-MctBQeGGoD
+      agent_arn: arn:aws:bedrock-agentcore:ap-southeast-1:891920435433:runtime/iac_guardrails-MctBQeGGoD
+      agent_session_id: demo-iac-guardrails-session-000000001
+    codebuild:
+      project_name: bedrock-agentcore-iac_guardrails-builder
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKCodeBuild-ap-southeast-1-ecde077b44
+      source_bucket: bedrock-agentcore-codebuild-sources-891920435433-ap-southeast-1
+    memory:
+      mode: STM_ONLY
+      memory_id: iac_guardrails_mem-qztM8c9Qv1
+      memory_arn: arn:aws:bedrock-agentcore:ap-southeast-1:891920435433:memory/iac_guardrails_mem-qztM8c9Qv1
+      memory_name: iac_guardrails_mem
+      event_expiry_days: 30
+      first_invoke_memory_check_done: true
+      was_created_by_toolkit: true
+    identity:
+      credential_providers: []
+      workload: null
+    aws_jwt:
+      enabled: false
+      audiences: []
+      signing_algorithm: ES384
+      issuer_url: null
+      duration_seconds: 300
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration: null
+    api_key_env_var_name: null
+    api_key_credential_provider_name: null
+    is_generated_by_agentcore_create: false
+  cicd_risk:
+    name: cicd_risk
+    language: python
+    node_version: '20'
+    entrypoint: /home/pac/Documents/vscode/aibase/workshops/labs/04-cicd-risk/agent.py
+    deployment_type: container
+    runtime_type: null
+    platform: linux/arm64
+    container_runtime: docker
+    source_path: /home/pac/Documents/vscode/aibase/workshops/labs/04-cicd-risk
+    aws:
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKRuntime-ap-southeast-1-a25e0786cf
+      execution_role_auto_create: false
+      account: '891920435433'
+      region: ap-southeast-1
+      ecr_repository: 891920435433.dkr.ecr.ap-southeast-1.amazonaws.com/bedrock-agentcore-cicd_risk
+      ecr_auto_create: false
+      s3_path: null
+      s3_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+      lifecycle_configuration:
+        idle_runtime_session_timeout: null
+        max_lifetime: null
+    bedrock_agentcore:
+      agent_id: cicd_risk-F9MB0iAMtG
+      agent_arn: arn:aws:bedrock-agentcore:ap-southeast-1:891920435433:runtime/cicd_risk-F9MB0iAMtG
+      agent_session_id: demo-cicd-risk-session-0000000000001
+    codebuild:
+      project_name: bedrock-agentcore-cicd_risk-builder
+      execution_role: arn:aws:iam::891920435433:role/AmazonBedrockAgentCoreSDKCodeBuild-ap-southeast-1-a25e0786cf
+      source_bucket: bedrock-agentcore-codebuild-sources-891920435433-ap-southeast-1
+    memory:
+      mode: STM_ONLY
+      memory_id: cicd_risk_mem-XJjqgB2E2r
+      memory_arn: arn:aws:bedrock-agentcore:ap-southeast-1:891920435433:memory/cicd_risk_mem-XJjqgB2E2r
+      memory_name: cicd_risk_mem
+      event_expiry_days: 30
+      first_invoke_memory_check_done: true
+      was_created_by_toolkit: true
+    identity:
+      credential_providers: []
+      workload: null
+    aws_jwt:
+      enabled: false
+      audiences: []
+      signing_algorithm: ES384
+      issuer_url: null
+      duration_seconds: 300
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration: null
+    api_key_env_var_name: null
+    api_key_credential_provider_name: null
+    is_generated_by_agentcore_create: false
