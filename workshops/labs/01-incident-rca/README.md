@@ -28,6 +28,18 @@ prompt drives the layer-04 loop. Tools simulated in-memory → no EKS/IAM.
  REVIEW   query_5xx_rate → 0.1% (<SLO) → report resolved
 ```
 
+## Dev vs example
+
+`agent.py` is your **working (dev) copy** — edit it freely. `example/agent.py` is
+the **pristine, verified reference**. To reset your dev copy back to a known-good
+state:
+
+```bash
+cp example/agent.py agent.py
+```
+
+Deploy always builds `agent.py` (`configure -e agent.py`).
+
 ## Run
 
 ```bash

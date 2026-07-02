@@ -25,6 +25,18 @@ in for the ch03 vector store → nothing to provision.
  answer only from retrieved snippets · cite [INC-4821] · else "I don't know"
 ```
 
+## Dev vs example
+
+`agent.py` is your **working (dev) copy** — edit it freely. `example/agent.py` is
+the **pristine, verified reference**. To reset your dev copy back to a known-good
+state:
+
+```bash
+cp example/agent.py agent.py
+```
+
+Deploy always builds `agent.py` (`configure -e agent.py`).
+
 ## Run
 
 ```bash

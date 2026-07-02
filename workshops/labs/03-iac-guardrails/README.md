@@ -26,6 +26,18 @@ checkov finding blocks apply*. On AgentCore Runtime. Generate + scan simulated.
  fix pass:  secure=True → 443 from 10.0.0.0/8 + public-access-block → PASSED
 ```
 
+## Dev vs example
+
+`agent.py` is your **working (dev) copy** — edit it freely. `example/agent.py` is
+the **pristine, verified reference**. To reset your dev copy back to a known-good
+state:
+
+```bash
+cp example/agent.py agent.py
+```
+
+Deploy always builds `agent.py` (`configure -e agent.py`).
+
 ## Run
 
 ```bash

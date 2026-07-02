@@ -26,6 +26,18 @@ AgentCore Runtime. Graph + history simulated.
  docs-site    = 0 dependents · docs incident rate 0%          → low score  → AUTO-MERGE
 ```
 
+## Dev vs example
+
+`agent.py` is your **working (dev) copy** — edit it freely. `example/agent.py` is
+the **pristine, verified reference**. To reset your dev copy back to a known-good
+state:
+
+```bash
+cp example/agent.py agent.py
+```
+
+Deploy always builds `agent.py` (`configure -e agent.py`).
+
 ## Run
 
 ```bash
