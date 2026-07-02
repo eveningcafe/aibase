@@ -26,17 +26,6 @@ checkov finding blocks apply*. On AgentCore Runtime. Generate + scan simulated.
  fix pass:  secure=True → 443 from 10.0.0.0/8 + public-access-block → PASSED
 ```
 
-## Build the agent
-
-`agent.py` is a **skeleton** — its tools and system prompt are `TODO`. Either fill
-them in yourself, or start from the verified reference in `example/`:
-
-```bash
-cp example/agent.py agent.py     # the complete answer key — then edit as you like
-```
-
-The deploy below builds whatever is in `agent.py` (`configure -e agent.py`).
-
 ## Run
 
 ```bash

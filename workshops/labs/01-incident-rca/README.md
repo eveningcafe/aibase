@@ -28,17 +28,6 @@ prompt drives the layer-04 loop. Tools simulated in-memory → no EKS/IAM.
  REVIEW   query_5xx_rate → 0.1% (<SLO) → report resolved
 ```
 
-## Build the agent
-
-`agent.py` is a **skeleton** — its tools and system prompt are `TODO`. Either fill
-them in yourself, or start from the verified reference in `example/`:
-
-```bash
-cp example/agent.py agent.py     # the complete answer key — then edit as you like
-```
-
-The deploy below builds whatever is in `agent.py` (`configure -e agent.py`).
-
 ## Run
 
 ```bash

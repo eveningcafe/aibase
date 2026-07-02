@@ -25,17 +25,6 @@ in for the ch03 vector store → nothing to provision.
  answer only from retrieved snippets · cite [INC-4821] · else "I don't know"
 ```
 
-## Build the agent
-
-`agent.py` is a **skeleton** — its tools and system prompt are `TODO`. Either fill
-them in yourself, or start from the verified reference in `example/`:
-
-```bash
-cp example/agent.py agent.py     # the complete answer key — then edit as you like
-```
-
-The deploy below builds whatever is in `agent.py` (`configure -e agent.py`).
-
 ## Run
 
 ```bash

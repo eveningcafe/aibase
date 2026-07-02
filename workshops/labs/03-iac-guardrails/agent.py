@@ -1,8 +1,7 @@
-"""Case 3 — IaC generate → review → policy gate. WORKSHOP SKELETON.
+"""Case 3 — IaC generate → review → policy gate, on AgentCore Runtime.
 
-Fill in the TODOs, or copy the reference:  cp example/agent.py agent.py
-Boilerplate is done; you write the two tools and the system prompt. The hard
-rule to enforce in the prompt: any HIGH finding blocks 'apply'.
+Simulated generate + checkov scan (no Terraform/checkov to install). The hard
+rule: any HIGH finding blocks 'apply'. Model: OpenRouter. See README.md.
 """
 import os
 
@@ -22,29 +21,39 @@ model = OpenAIModel(
 )
 
 
-# --- TODO: implement the two tools -------------------------------------------
 @tool
 def generate_terraform(request: str, secure: bool = False) -> str:
     """Generate a Terraform snippet for the request. secure=False emits the fast,
     plausible-but-risky version; secure=True applies constraint-first hardening."""
-    # TODO: return risky HCL (e.g. SG ingress 0.0.0.0/0 on 22, S3 with no
-    #       public-access block) when secure=False; return the hardened version
-    #       (restricted CIDR + aws_s3_bucket_public_access_block) when secure=True.
-    ...
+    if secure:
+        return ('resource "aws_security_group" "sg" {\n'
+                '  ingress { from_port=443 to_port=443 protocol="tcp" cidr_blocks=["10.0.0.0/8"] }\n}\n'
+                'resource "aws_s3_bucket_public_access_block" "b" { block_public_acls=true }')
+    return ('resource "aws_security_group" "sg" {\n'
+            '  ingress { from_port=22 to_port=22 protocol="tcp" cidr_blocks=["0.0.0.0/0"] }\n}\n'
+            'resource "aws_s3_bucket" "b" { bucket="data" }  # no public-access block')
 
 
 @tool
 def checkov_scan(terraform: str) -> str:
     """Static policy scan. Returns findings by severity. Any HIGH blocks apply."""
-    # TODO: inspect the HCL string and report HIGH findings (0.0.0.0/0 ingress,
-    #       S3 missing public-access block); return PASSED when there are none.
-    ...
+    findings = []
+    if "0.0.0.0/0" in terraform:
+        findings.append("HIGH  CKV_AWS_260  Security group allows ingress from 0.0.0.0/0")
+    if "public_access_block" not in terraform and "aws_s3_bucket" in terraform:
+        findings.append("HIGH  CKV_AWS_53   S3 bucket missing public-access block")
+    if not findings:
+        return "PASSED — 0 HIGH findings. Safe to apply."
+    return "FAILED — HIGH findings present (apply blocked):\n" + "\n".join(findings)
 
 
-# TODO: write the system prompt — drive the loop L1 generate → L2 review →
-# L3 checkov_scan. HARD RULE: any HIGH finding → do NOT approve; regenerate with
-# secure=True and re-scan. Only report "safe to apply" on a clean (0 HIGH) scan.
-SYSTEM_PROMPT = "TODO"
+SYSTEM_PROMPT = (
+    "You are an IaC guardrail agent. Loop: L1 generate_terraform → L2 review the "
+    "resources → L3 checkov_scan. HARD RULE: if the scan reports any HIGH finding, "
+    "do NOT approve apply — regenerate with secure=True and re-scan. Only report "
+    "'safe to apply' once the scan PASSES with 0 HIGH. Show the passing snippet and "
+    "the fixes you made."
+)
 
 
 @app.entrypoint

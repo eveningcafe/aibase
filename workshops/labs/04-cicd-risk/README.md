@@ -26,17 +26,6 @@ AgentCore Runtime. Graph + history simulated.
  docs-site    = 0 dependents · docs incident rate 0%          → low score  → AUTO-MERGE
 ```
 
-## Build the agent
-
-`agent.py` is a **skeleton** — its tools and system prompt are `TODO`. Either fill
-them in yourself, or start from the verified reference in `example/`:
-
-```bash
-cp example/agent.py agent.py     # the complete answer key — then edit as you like
-```
-
-The deploy below builds whatever is in `agent.py` (`configure -e agent.py`).
-
 ## Run
 
 ```bash
