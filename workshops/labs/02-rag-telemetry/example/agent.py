@@ -1,7 +1,7 @@
-"""Case 2 — RAG over incident history + runbooks. WORKSHOP SKELETON.
+"""Case 2 — RAG over incident history + runbooks, on AgentCore Runtime.
 
-Fill in the TODOs, or copy the reference:  cp example/agent.py agent.py
-Boilerplate + corpus are done; you write the retrieval tool and the system prompt.
+In-memory corpus + naive semantic search (no vector DB to run). Model: OpenRouter.
+See README.md.
 """
 import os
 
@@ -20,8 +20,8 @@ model = OpenAIModel(
     model_id=MODEL_ID,
 )
 
-# --- given fixture: stand-in for the ch03 vector store ------------------------
-# A real build embeds these and does ANN search; here you rank in Python.
+# Stand-in for the vector store from ch03: past incidents + runbooks. A real
+# build embeds these and does ANN search; here we keyword-overlap rank.
 _CORPUS = [
     ("INC-4821", "checkout-api 5xx spike on 2026-06-30: deploy v2.3 shrank the DB "
                  "connection pool to 5. Fix: rolled back to v2.2 (image :1.0)."),
@@ -35,20 +35,23 @@ _CORPUS = [
 ]
 
 
-# --- TODO: implement the retrieval tool --------------------------------------
 @tool
 def search_incidents(query: str, k: int = 3) -> str:
     """Retrieve the most relevant past incidents / runbook snippets for a query."""
-    # TODO: rank _CORPUS by word overlap with the query, return the top-k as
-    #       "[id] text" lines (or a "no records" message). This is the "retrieve"
-    #       step — the model must answer only from what you return here.
-    ...
+    q = set(query.lower().split())
+    ranked = sorted(_CORPUS, key=lambda d: len(q & set(d[1].lower().split())), reverse=True)
+    hits = [(i, t) for i, t in ranked if q & set(t.lower().split())][:k]
+    if not hits:
+        return "No relevant records found."
+    return "\n".join(f"[{i}] {t}" for i, t in hits)
 
 
-# TODO: write the system prompt — the agent must call search_incidents FIRST,
-# answer ONLY from the returned snippets, cite ids like [INC-4821], and say "I
-# don't know" when the records don't cover the question.
-SYSTEM_PROMPT = "TODO"
+SYSTEM_PROMPT = (
+    "You are an on-call SRE assistant. Answer ONLY from records returned by "
+    "search_incidents — call it first, ground every claim in a retrieved snippet, "
+    "and cite the record id like [INC-4821]. If the records don't contain the "
+    "answer, say you don't know. Be concise."
+)
 
 
 @app.entrypoint

@@ -1,7 +1,6 @@
-"""Case 1 — SRE incident agent (triage → RCA → rollback). WORKSHOP SKELETON.
+"""Case 1 — SRE incident agent (triage → RCA → rollback) on AgentCore Runtime.
 
-Fill in the TODOs, or copy the reference:  cp example/agent.py agent.py
-Boilerplate + fixtures are done; you write the tools and the system prompt.
+Tools simulated in-memory (no EKS/IAM). Model: OpenRouter. See README.md.
 """
 import os
 
@@ -20,9 +19,8 @@ model = OpenAIModel(
     model_id=MODEL_ID,
 )
 
-# --- given fixtures (stand-ins for real EKS + CloudWatch) ---------------------
-# Stateful within a session (one microVM per session_id): a rollback flips this,
-# and the REVIEW re-measure sees it.
+# Stateful within a session (one microVM per session_id): rollback flips state,
+# the review re-measure sees it. A real deploy reads/writes EKS + CloudWatch here.
 _STATE = {"image": "hashicorp/http-echo:1.1", "healthy": False}
 
 _ROLLOUT_HISTORY = [
@@ -31,33 +29,36 @@ _ROLLOUT_HISTORY = [
 ]
 
 
-# --- TODO: implement the three tools -----------------------------------------
-# The docstring is what the model reads to decide WHEN to call a tool — keep it clear.
 @tool
 def query_5xx_rate(window_min: int = 15) -> str:
     """checkout-api 5xx error rate. Call to diagnose, and AGAIN after a fix to verify."""
-    # TODO: return a healthy reading (<0.5%) when _STATE["healthy"], else a breach (~6%).
-    ...
+    if _STATE["healthy"]:
+        return f"5xx over last {window_min}m: 0.1% (nominal, < 0.5% SLO)."
+    return (f"5xx over last {window_min}m: 6.2% (BREACHING SLO). "
+            "Step-change began ~14:32, right after the 14:30 rollout.")
 
 
 @tool
 def get_rollout_history(service: str = "checkout-api") -> str:
     """Recent deployment revisions: image, timestamp, change-cause."""
-    # TODO: return the _ROLLOUT_HISTORY joined into readable lines.
-    ...
+    return f"Rollout history for {service}:\n" + "\n".join(_ROLLOUT_HISTORY)
 
 
 @tool
 def rollback_deployment(service: str = "checkout-api",
                         to_image: str = "hashicorp/http-echo:1.0") -> str:
     """Roll a service back to a known-good image. RISKY — affects live traffic."""
-    # TODO: flip _STATE to healthy on to_image, and return a confirmation.
-    ...
+    _STATE.update(image=to_image, healthy=True)
+    return f"Patched {service} → {to_image}. Re-measure 5xx before declaring resolved."
 
 
-# TODO: write the system prompt — steer the agent through PLAN → EXECUTE → REVIEW,
-# and forbid claiming a fix without re-measuring 5xx. End with a one-line RCA.
-SYSTEM_PROMPT = "TODO"
+SYSTEM_PROMPT = (
+    "You are an on-call SRE agent for checkout-api. Work the loop: PLAN — read the "
+    "5xx rate and rollout history to reason out the cause; EXECUTE — if a bad deploy "
+    "is the cause, roll back to the last known-good image; REVIEW — re-measure 5xx "
+    "and only report 'resolved' once it is back under SLO. Never claim a fix you did "
+    "not verify. Finish with a one-line RCA: cause, action, verified 5xx result."
+)
 
 
 @app.entrypoint

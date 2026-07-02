@@ -17,7 +17,7 @@ prompt drives the layer-04 loop. Tools simulated in-memory → no EKS/IAM.
 │       ▲                            │ 5xx<SLO → resolved+RCA    │
 │       └──── 5xx still high ────────┘                           │
 │      │            │            │                               │
-│      ▼            ▼            ▼                                │
+│      ▼            ▼            ▼                               │
 │ query_5xx_rate  get_rollout  rollback_deployment               │
 │      └────────────┴────────────┘ read/write _STATE (in-mem)    │
 │                                   ← swap for real EKS+CloudWatch│
@@ -27,6 +27,17 @@ prompt drives the layer-04 loop. Tools simulated in-memory → no EKS/IAM.
  EXECUTE  rollback_deployment(→ :1.0 last-good)      flips _STATE.healthy
  REVIEW   query_5xx_rate → 0.1% (<SLO) → report resolved
 ```
+
+## Build the agent
+
+`agent.py` is a **skeleton** — its tools and system prompt are `TODO`. Either fill
+them in yourself, or start from the verified reference in `example/`:
+
+```bash
+cp example/agent.py agent.py     # the complete answer key — then edit as you like
+```
+
+The deploy below builds whatever is in `agent.py` (`configure -e agent.py`).
 
 ## Run
 
