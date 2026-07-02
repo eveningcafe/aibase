@@ -1,9 +1,9 @@
 """Telegram → AgentCore bridge: 4 bots in one group, each fronting one Runtime.
 
-Privacy mode (default ON) means each bot only receives messages that @mention it,
-reply to it, or are slash commands — so @incident_rca_bot routes straight to that
-bot with no central router. On a mention, the bot forwards the text to its
-deployed AgentCore Runtime and posts the reply.
+Each bot keeps group privacy ON (BotFather default) as a regular member, so it
+receives ONLY messages that @mention it, reply to it, or are commands — never
+other chatter. `_addressed_to` confirms the target (mention / reply / 1:1) before
+the bot forwards the text to its deployed AgentCore Runtime and posts the reply.
 
 Sessions are PER GROUP: session_id = chat + bot (+ /reset epoch). Everyone in the
 room shares one conversation per bot. See README.md for the design.
@@ -48,11 +48,31 @@ def _invoke_runtime(arn: str, session_id: str, actor_id: str, prompt: str) -> st
         return body.decode(errors="replace")
 
 
-def _make_message_handler(name: str, cfg: dict, username: str):
+def _addressed_to(msg, username: str, bot_id: int) -> bool:
+    """True if this message targets THIS bot: an @mention, a text-mention, a reply
+    to the bot, or a 1:1 chat. Needed because with privacy off (or as admin) a bot
+    sees ALL group messages — we only answer the ones aimed at us."""
+    if msg.chat.type == "private":
+        return True
+    if (msg.reply_to_message and msg.reply_to_message.from_user
+            and msg.reply_to_message.from_user.id == bot_id):
+        return True
+    for ent in (msg.entities or []):
+        if ent.type == "mention" and \
+           (msg.text[ent.offset:ent.offset + ent.length].lower() == f"@{username}".lower()):
+            return True
+        if ent.type == "text_mention" and ent.user and ent.user.id == bot_id:
+            return True
+    return False
+
+
+def _make_message_handler(name: str, cfg: dict, username: str, bot_id: int):
     async def handler(update, context):
         msg = update.effective_message
         if not msg or not msg.text:
             return
+        if not _addressed_to(msg, username, bot_id):
+            return                              # not aimed at this bot — stay quiet
         prompt = msg.text.replace(f"@{username}", "").strip()
         if not prompt:
             await msg.reply_text(f"Hi — I'm the *{name}* agent ({cfg['blurb']}). "
@@ -86,7 +106,8 @@ async def _start_bot(name: str, cfg: dict) -> Application:
     me = await app.bot.get_me()
     app.add_handler(CommandHandler("reset", _make_reset_handler(name)))
     app.add_handler(MessageHandler(
-        filters.TEXT & ~filters.COMMAND, _make_message_handler(name, cfg, me.username)))
+        filters.TEXT & ~filters.COMMAND,
+        _make_message_handler(name, cfg, me.username, me.id)))
     await app.initialize()
     await app.start()
     await app.updater.start_polling(drop_pending_updates=True)

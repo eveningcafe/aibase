@@ -11,10 +11,10 @@ deployed AgentCore Runtimes.
 │  you: "@incident_rca_bot checkout-api 5xx!"      │
 │  you: "@rag_telemetry_bot who owns checkout-api?"│
 └──────────────────────────────────────────────────┘
-        │  each bot has PRIVACY MODE ON (default) →
-        │  it ONLY receives msgs that @mention it, reply to it, or /cmd
-        ▼   (that IS the router — no central dispatch)
+        │  each bot has PRIVACY ON (regular member, not admin) →
+        ▼   it receives ONLY msgs that @mention/reply to it (never other chat)
 ┌──────────── bridge.py (one process, 4 async pollers) ─────────────┐
+│  _addressed_to? (mention / reply / DM) — else stay quiet           │
 │  on @mention → strip mention → prompt                              │
 │  session_id = tg-<bot>-<chat_id>-e<epoch>   (PER GROUP, ≥33 chars) │
 │  boto3 invoke_agent_runtime(ARN, session_id, {"prompt": ...})      │
@@ -42,13 +42,19 @@ context with each bot; the durable identity (`actor_id`) is the room.
 
 **1. Create 4 bots** with [@BotFather](https://t.me/BotFather) (`/newbot` ×4) — keep
 each token. Suggested usernames: `..._incident_rca_bot`, `..._rag_telemetry_bot`,
-`..._iac_guardrails_bot`, `..._cicd_risk_bot`. Leave **group privacy ON** (default)
-— that's what makes `@mention` routing work.
+`..._iac_guardrails_bot`, `..._cicd_risk_bot`.
 
-**2. Make a group** (a group/supergroup, *not* a channel — channels are broadcast
-and bots can't read mentions there). Add all 4 bots as members.
+**2. Keep group privacy ON** (BotFather default) so each bot receives *only*
+messages that @mention it, reply to it, or are commands — never other chatter. If
+you changed it earlier, set it back: @BotFather → `/setprivacy` → pick the bot →
+**Enable**. Keep bots as **regular members**, not admins (admin bypasses privacy).
 
-**3. Run the bridge:**
+**3. Make a group** (a group/supergroup, *not* a channel — channels are broadcast
+and bots can't read messages there). Add all 4 bots as members. **Telegram applies
+a privacy change only when the bot (re)joins**, so if you just flipped
+`/setprivacy`, remove and re-add each bot.
+
+**4. Run the bridge:**
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
